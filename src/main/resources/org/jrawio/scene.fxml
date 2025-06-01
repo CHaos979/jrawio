@@ -18,11 +18,8 @@
                   <Label text="左侧面板" />
                </children>
             </VBox>
-            <ScrollPane fx:id="centerScrollPane" prefWidth="880.0" prefHeight="720.0" fitToWidth="false" fitToHeight="false" pannable="true">
-               <content>
-                  <fx:include source="layout/center_panel.fxml" />
-               </content>
-            </ScrollPane>
+            <!-- 中间画布 -->
+            <fx:include source="layout/center_panel.fxml" /> 
             <VBox fx:id="rightPanel" prefWidth="200.0" style="-fx-background-color: #f1f8e9;">
                <children>
                   <Label text="右侧面板" />
