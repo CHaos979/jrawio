@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="centerPanel"
+   prefWidth="880.0"
+   prefHeight="720.0"
+   style="-fx-background-color: #ffffff;"
+   xmlns="http://javafx.com/javafx/8.0.171"
+   xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <fx:include source="../components/canvas_component.fxml" />
+   </children>
+
+</VBox>

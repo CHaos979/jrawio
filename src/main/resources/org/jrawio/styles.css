@@ -1,0 +1,7 @@
+.label {
+    -fx-text-fill: blue;
+}
+
+#vboxPanel {
+    -fx-background-color: #b3e5fc;
+}

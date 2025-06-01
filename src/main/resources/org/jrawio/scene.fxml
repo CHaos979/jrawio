@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.ScrollPane?>
+
+
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox spacing="10.0" prefHeight="720.0" prefWidth="1280.0">
+         <children>
+            <VBox fx:id="leftPanel" prefWidth="200.0" style="-fx-background-color: #e3f2fd;">
+               <children>
+                  <Label text="左侧面板" />
+               </children>
+            </VBox>
+            <ScrollPane fx:id="centerScrollPane" prefWidth="880.0" prefHeight="720.0" fitToWidth="false" fitToHeight="false" pannable="true">
+               <content>
+                  <fx:include source="layout/center_panel.fxml" />
+               </content>
+            </ScrollPane>
+            <VBox fx:id="rightPanel" prefWidth="200.0" style="-fx-background-color: #f1f8e9;">
+               <children>
+                  <Label text="右侧面板" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+   </children>
+</StackPane>

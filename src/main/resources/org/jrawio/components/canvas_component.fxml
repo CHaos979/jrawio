@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.canvas.Canvas?>
+
+<Pane fx:id="canvasPane"
+      prefWidth="880.0"
+      prefHeight="720.0"
+      style="-fx-background-color: transparent;"
+      fx:controller="org.jrawio.controller.CanvasComponentController"
+      xmlns="http://javafx.com/javafx/8.0.171"
+      xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <Canvas fx:id="gridCanvas" width="880.0" height="720.0"/>
+    </children>
+</Pane>
