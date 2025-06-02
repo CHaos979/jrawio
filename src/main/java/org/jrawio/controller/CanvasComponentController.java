@@ -51,7 +51,7 @@ public class CanvasComponentController {
             boolean success = false;
             if (db.hasString() && db.getString().equals("circle")) {
                 // 创建Shape对象
-                Shape shape = new Shape(40, 40);
+                Shape shape = new Shape(80, 80);
                 // 设置放置位置
                 shape.setLayoutX(event.getX() - shape.getWidth() / 2);
                 shape.setLayoutY(event.getY() - shape.getHeight() / 2);
