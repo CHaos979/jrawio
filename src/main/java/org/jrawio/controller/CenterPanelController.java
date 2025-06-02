@@ -1,5 +1,6 @@
 package org.jrawio.controller;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;
 
@@ -9,8 +10,8 @@ public class CenterPanelController {
 
     @FXML
     public void initialize() {
-        // 等待布局完成后设置滚动条位置到正中间
-        centerScrollPane.viewportBoundsProperty().addListener((obs, oldVal, newVal) -> {
+        // 只在初始化时设置一次滚动条位置到正中间
+        Platform.runLater(() -> {
             centerScrollPane.setHvalue(0.5);
             centerScrollPane.setVvalue(0.5);
         });

@@ -36,14 +36,6 @@ public class CanvasComponentController {
         // 让gridCanvas不响应鼠标事件
         gridCanvas.setMouseTransparent(true);
 
-        // 添加阴影效果
-        DropShadow dropShadow = new DropShadow();
-        dropShadow.setRadius(20);
-        dropShadow.setOffsetX(5);
-        dropShadow.setOffsetY(5);
-        dropShadow.setColor(Color.rgb(50, 50, 50, 0.4));
-        gridCanvas.setEffect(dropShadow);
-
         // 允许拖拽进入
         canvasPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
@@ -150,5 +142,13 @@ public class CanvasComponentController {
         for (double y = 0; y <= height; y += gridSize) {
             gc.strokeLine(0, y, width, y);
         }
+
+        // 添加阴影效果
+        DropShadow dropShadow = new DropShadow();
+        dropShadow.setRadius(20);
+        dropShadow.setOffsetX(5);
+        dropShadow.setOffsetY(5);
+        dropShadow.setColor(Color.rgb(50, 50, 50, 0.4));
+        gridCanvas.setEffect(dropShadow);
     }
 }

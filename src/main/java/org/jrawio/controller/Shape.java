@@ -4,39 +4,65 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.Node;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Shape extends Canvas {
     private boolean selected = false;
+
+    // 用于记录每个选中Shape的初始位置
+    private Map<Shape, double[]> selectedShapesOrigin = new HashMap<>();
+
+    // 拖动相关成员变量
+    private double orgSceneX, orgSceneY;
 
     public Shape(double width, double height) {
         super(width, height);
         draw();
 
         this.setOnMouseClicked(this::handleClick);
-
-        // 支持拖动
-        this.setOnMousePressed(event -> {
-            this.toFront(); // 拖动时置顶
-            orgSceneX = event.getSceneX();
-            orgSceneY = event.getSceneY();
-            orgTranslateX = getLayoutX();
-            orgTranslateY = getLayoutY();
-        });
-
-        this.setOnMouseDragged(event -> {
-            double offsetX = event.getSceneX() - orgSceneX;
-            double offsetY = event.getSceneY() - orgSceneY;
-            setLayoutX(orgTranslateX + offsetX);
-            setLayoutY(orgTranslateY + offsetY);
-        });
+        this.setOnMousePressed(this::handlePressed);
+        this.setOnMouseDragged(this::handleDragged);
     }
 
-    // 添加成员变量
-    private double orgSceneX, orgSceneY;
-    private double orgTranslateX, orgTranslateY;
+    private void handlePressed(MouseEvent event) {
+        this.toFront();
+        orgSceneX = event.getSceneX();
+        orgSceneY = event.getSceneY();
 
+
+        // 记录所有被选中Shape的初始位置
+        selectedShapesOrigin.clear();
+        for (Node node : getParent().getChildrenUnmodifiable()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                if (shape.isSelected()) {
+                    selectedShapesOrigin.put(shape, new double[]{shape.getLayoutX(), shape.getLayoutY()});
+                }
+            }
+        }
+        event.consume();
+    }
+
+    private void handleDragged(MouseEvent event) {
+        double offsetX = event.getSceneX() - orgSceneX;
+        double offsetY = event.getSceneY() - orgSceneY;
+        // 同步移动所有被选中的Shape
+        for (Map.Entry<Shape, double[]> entry : selectedShapesOrigin.entrySet()) {
+            Shape shape = entry.getKey();
+            double[] origin = entry.getValue();
+            shape.setLayoutX(origin[0] + offsetX);
+            shape.setLayoutY(origin[1] + offsetY);
+        }
+        event.consume();
+    }
+
+    // 只有点按空白处解除选中
     private void handleClick(MouseEvent event) {
-        selected = !selected;
+        if (!selected) {
+            selected = true;
+        }
         draw();
     }
 
