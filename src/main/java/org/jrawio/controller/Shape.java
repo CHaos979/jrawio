@@ -70,6 +70,11 @@ public class Shape extends Canvas {
         orgSceneX = event.getSceneX();
         orgSceneY = event.getSceneY();
 
+        // 拖动时如果未选中，则先选中自己
+        if (!selected) {
+            setSelected(true);
+        }
+
         // 记录所有被选中Shape的初始位置
         selectedShapesOrigin.clear();
         for (Node node : getParent().getChildrenUnmodifiable()) {
