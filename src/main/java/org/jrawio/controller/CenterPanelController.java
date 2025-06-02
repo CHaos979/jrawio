@@ -14,5 +14,8 @@ public class CenterPanelController {
             centerScrollPane.setHvalue(0.5);
             centerScrollPane.setVvalue(0.5);
         });
+
+        // 禁止ScrollPane的拖拽滚动（pannable）
+        centerScrollPane.setPannable(false);
     }
 }

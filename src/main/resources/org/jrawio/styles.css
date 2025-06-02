@@ -5,3 +5,15 @@
 #vboxPanel {
     -fx-background-color: #b3e5fc;
 }
+
+
+.shape-button-root {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-background-radius: 6;
+    -fx-padding: 4;
+}
+
+.shape-button-root:hover {
+    -fx-background-color: #e0e0e0;
+}
