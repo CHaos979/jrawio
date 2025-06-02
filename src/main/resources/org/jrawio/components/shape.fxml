@@ -7,7 +7,7 @@
            prefWidth="48.0" prefHeight="48.0"
            xmlns="http://javafx.com/javafx/8.0.171"
            xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="org.jrawio.controller.ShapeController">
+           fx:controller="org.jrawio.controller.Shape">
     <children>
         <Canvas fx:id="shapeCanvas" width="48.0" height="48.0"/>
     </children>

@@ -7,7 +7,7 @@ import java.util.List;
 import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
 
-public class LeftPanelController {
+public class LeftPanel {
     @FXML
     private VBox leftPanel;
     private final List<ShapeBar> shapeBarControllers = new ArrayList<>();
@@ -18,6 +18,7 @@ public class LeftPanelController {
                 .setTitle("基本图形")
                 .setExpanded(true)
                 .build());
-        leftPanel.getChildren().add(shapeBarControllers.getFirst());
+        shapeBarControllers.add(new ShapeBar.Builder().setTitle("流程图").build());
+        shapeBarControllers.stream().forEach(leftPanel.getChildren()::add);
     }
 }
