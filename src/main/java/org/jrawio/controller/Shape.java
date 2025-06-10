@@ -4,19 +4,17 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Shape extends Canvas {
-    private boolean selected = false;
-    private String text = "";
-    private TextField textField;
+    private boolean selected = false; // 是否被选中
+    private static final Set<Shape> selectedShapes = new HashSet<>(); // 被选中的所有图形
 
-    // 用于记录每个选中Shape的初始位置
-    private Map<Shape, double[]> selectedShapesOrigin = new HashMap<>();
+    private String text = ""; // 文本
+    private TextField textField; // 文本框控件
 
     // 拖动相关成员变量
     private double orgSceneX, orgSceneY;
@@ -41,7 +39,8 @@ public class Shape extends Canvas {
     }
 
     private void startEdit() {
-        if (textField != null) return;
+        if (textField != null)
+            return;
         Pane parent = (Pane) getParent();
         textField = new TextField(text);
         textField.setPrefWidth(getWidth() - 8);
@@ -52,12 +51,14 @@ public class Shape extends Canvas {
 
         textField.setOnAction(e -> finishEdit());
         textField.focusedProperty().addListener((obs, oldV, newV) -> {
-            if (!newV) finishEdit();
+            if (!newV)
+                finishEdit();
         });
     }
 
     private void finishEdit() {
-        if (textField == null) return;
+        if (textField == null)
+            return;
         text = textField.getText();
         Pane parent = (Pane) getParent();
         parent.getChildren().remove(textField);
@@ -72,18 +73,7 @@ public class Shape extends Canvas {
 
         // 拖动时如果未选中，则先选中自己
         if (!selected) {
-            setSelected(true);
-        }
-
-        // 记录所有被选中Shape的初始位置
-        selectedShapesOrigin.clear();
-        for (Node node : getParent().getChildrenUnmodifiable()) {
-            if (node instanceof Shape) {
-                Shape shape = (Shape) node;
-                if (shape.isSelected()) {
-                    selectedShapesOrigin.put(shape, new double[] { shape.getLayoutX(), shape.getLayoutY() });
-                }
-            }
+            handleClick(event);
         }
         event.consume();
     }
@@ -92,34 +82,40 @@ public class Shape extends Canvas {
         double offsetX = event.getSceneX() - orgSceneX;
         double offsetY = event.getSceneY() - orgSceneY;
         // 同步移动所有被选中的Shape
-        for (Map.Entry<Shape, double[]> entry : selectedShapesOrigin.entrySet()) {
-            Shape shape = entry.getKey();
-            double[] origin = entry.getValue();
-            shape.setLayoutX(origin[0] + offsetX);
-            shape.setLayoutY(origin[1] + offsetY);
+        for (Shape shape : selectedShapes) {
+            shape.setLayoutX(shape.getLayoutX() + offsetX);
+            shape.setLayoutY(shape.getLayoutY() + offsetY);
+
             // 同步移动文本框
             if (shape.textField != null) {
                 shape.textField.setLayoutX(shape.getLayoutX() + 4);
                 shape.textField.setLayoutY(shape.getLayoutY() + shape.getHeight() / 2 - 12);
             }
         }
+        orgSceneX = event.getSceneX();
+        orgSceneY = event.getSceneY();
         event.consume();
     }
 
-    // 只有点按空白处解除选中
     private void handleClick(MouseEvent event) {
-        if (!selected) {
-            selected = true;
+        System.out.println(selectedShapes);
+        for (Shape shape : selectedShapes) {
+            shape.setSelected(false);
         }
+        setSelected(true);
         draw();
     }
 
-    public boolean isSelected() {
-        return selected;
-    }
-
     public void setSelected(boolean selected) {
+        if (this.selected == selected) {
+            return;
+        }
         this.selected = selected;
+        if (selected) {
+            selectedShapes.add(this);
+        } else {
+            selectedShapes.remove(this);
+        }
         draw();
     }
 
