@@ -13,29 +13,20 @@ public class Shape extends Canvas {
     private boolean selected = false; // 是否被选中
     private static final Set<Shape> selectedShapes = new HashSet<>(); // 被选中的所有图形
 
-    private String text = ""; // 文本
+    private String text = this.toString(); // 文本
     private TextField textField; // 文本框控件
 
     // 拖动相关成员变量
     private double orgSceneX, orgSceneY;
+    private boolean dragging = false; // 新增：是否正在拖动
 
     public Shape(double width, double height) {
         super(width, height);
         draw();
 
-        this.setOnMouseClicked(this::handleClick);
         this.setOnMousePressed(this::handlePressed);
         this.setOnMouseDragged(this::handleDragged);
-
-        // 双击进入编辑
-        this.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                startEdit();
-                event.consume();
-            } else {
-                handleClick(event);
-            }
-        });
+        this.setOnMouseClicked(this::handleClick);
     }
 
     private void startEdit() {
@@ -70,6 +61,7 @@ public class Shape extends Canvas {
         this.toFront();
         orgSceneX = event.getSceneX();
         orgSceneY = event.getSceneY();
+        dragging = false; // 按下时重置拖动标志
 
         // 拖动时如果未选中，则先选中自己
         if (!selected) {
@@ -94,16 +86,27 @@ public class Shape extends Canvas {
         }
         orgSceneX = event.getSceneX();
         orgSceneY = event.getSceneY();
+        dragging = true; // 拖动时设置为true
         event.consume();
     }
 
     private void handleClick(MouseEvent event) {
-        System.out.println(selectedShapes);
+        System.out.println("[handleClick]"+this.toString());
+        if (event.getClickCount() == 2) {
+            startEdit();
+            event.consume();
+            return;
+        }
+        if (dragging) {
+            // 如果是拖动后产生的点击，忽略
+            dragging = false;
+            return;
+        }
         for (Shape shape : selectedShapes) {
             shape.setSelected(false);
         }
         setSelected(true);
-        draw();
+        event.consume();
     }
 
     public void setSelected(boolean selected) {
