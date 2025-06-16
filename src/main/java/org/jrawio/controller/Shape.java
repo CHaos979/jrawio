@@ -58,6 +58,7 @@ public class Shape extends Canvas {
     }
 
     private void handlePressed(MouseEvent event) {
+        System.out.println("[handlePressed]"+this.toString());
         this.toFront();
         orgSceneX = event.getSceneX();
         orgSceneY = event.getSceneY();
@@ -91,7 +92,7 @@ public class Shape extends Canvas {
     }
 
     private void handleClick(MouseEvent event) {
-        System.out.println("[handleClick]"+this.toString());
+        System.out.println("[handleClick]" + this.toString());
         if (event.getClickCount() == 2) {
             startEdit();
             event.consume();
@@ -102,10 +103,20 @@ public class Shape extends Canvas {
             dragging = false;
             return;
         }
-        for (Shape shape : selectedShapes) {
-            shape.setSelected(false);
+
+        boolean multiSelect = event.isShiftDown() || event.isControlDown();
+
+        if (multiSelect) {
+            // 多选：切换当前 shape 的选中状态，不影响其他 shape
+            setSelected(!selected);
+        } else {
+            // 单选：取消其他 shape 的选中，只选中当
+            System.out.println("[handleClick] cancel select other shape");
+            for (Shape shape : selectedShapes.toArray(new Shape[0])) {
+                shape.setSelected(false);
+            }
+            setSelected(true);
         }
-        setSelected(true);
         event.consume();
     }
 
