@@ -17,11 +17,8 @@
             <fx:include source="layout/left_panel.fxml" />
             <!-- 中间画布 -->
             <fx:include source="layout/center_panel.fxml" /> 
-            <VBox fx:id="rightPanel" prefWidth="200.0" style="-fx-background-color: #f1f8e9;">
-               <children>
-                  <Label text="右侧面板" />
-               </children>
-            </VBox>
+            <!-- 右侧面板 -->
+            <fx:include source="layout/right_panel.fxml" />
          </children>
       </HBox>
    </children>
