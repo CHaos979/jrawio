@@ -146,6 +146,15 @@ public class Shape extends Canvas {
         draw();
     }
 
+    public void setShapeWidth(double width) {
+        super.setWidth(width);
+        draw();
+    }
+    public void setShapeHeight(double height) {
+        super.setHeight(height);
+        draw();
+    }
+
     private void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
