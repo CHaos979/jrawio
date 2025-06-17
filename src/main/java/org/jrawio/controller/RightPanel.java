@@ -2,6 +2,7 @@ package org.jrawio.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import java.util.Set;
 
@@ -27,14 +28,18 @@ public class RightPanel {
             rightPanelRoot.getChildren().add(new Label("未选中任何图形"));
         } else {
             for (Shape shape : selectedShapes) {
-                String info = shape.toString();
-                try {
-                    java.lang.reflect.Field textField = shape.getClass().getDeclaredField("text");
-                    textField.setAccessible(true);
-                    Object textValue = textField.get(shape);
-                    if (textValue != null) info = textValue.toString();
-                } catch (Exception ignore) {}
-                rightPanelRoot.getChildren().add(new Label("选中: " + info));
+                Label label = new Label("属性：");
+                TextField input = new TextField(shape.getText());
+                input.setPrefWidth(120);
+                input.setOnAction(e -> {
+                    shape.setText(input.getText());
+                });
+                input.focusedProperty().addListener((obs, oldV, newV) -> {
+                    if (!newV) {
+                        shape.setText(input.getText());
+                    }
+                });
+                rightPanelRoot.getChildren().addAll(label, input);
             }
         }
     }

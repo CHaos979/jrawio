@@ -138,6 +138,14 @@ public class Shape extends Canvas {
         }
     }
 
+    public String getText() {
+        return text;
+    }
+    public void setText(String text) {
+        this.text = text;
+        draw();
+    }
+
     private void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
