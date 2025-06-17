@@ -131,6 +131,11 @@ public class Shape extends Canvas {
             selectedShapes.remove(this);
         }
         draw();
+        // 通知右侧面板
+        RightPanel rightPanel = RightPanel.getInstance();
+        if (rightPanel != null) {
+            rightPanel.onShapeSelectionChanged(selectedShapes);
+        }
     }
 
     private void draw() {
