@@ -1,4 +1,4 @@
-package org.jrawio.controller;
+package org.jrawio.controller.shape;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -6,6 +6,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
+import org.jrawio.controller.RightPanel;
 import java.util.HashSet;
 import java.util.Set;
 

@@ -1,14 +1,14 @@
-package org.jrawio.controller;
+package org.jrawio.controller.shape;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 /**
- * 矩形图形实现类
+ * 椭圆/圆形图形实现类
  */
-public class RectangleShape extends Shape {
+public class OvalShape extends Shape {
     
-    public RectangleShape(double width, double height) {
+    public OvalShape(double width, double height) {
         super(width, height);
     }
     
@@ -18,7 +18,7 @@ public class RectangleShape extends Shape {
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
         
-        // 绘制矩形
-        gc.strokeRect(x, y, width, height);
+        // 绘制椭圆/圆形
+        gc.strokeOval(x, y, width, height);
     }
 }

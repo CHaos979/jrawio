@@ -9,6 +9,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
+import org.jrawio.controller.shape.Shape;
+import org.jrawio.controller.shape.OvalShape;
 
 public class CanvasComponentController {
     @FXML
