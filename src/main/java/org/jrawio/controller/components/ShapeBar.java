@@ -15,7 +15,7 @@ public class ShapeBar extends TitledPane {
         FlowPane flowPane = new FlowPane();
         flowPane.setHgap(8);
         flowPane.setVgap(8);
-        flowPane.setStyle("-fx-padding: 10;");
+        flowPane.setStyle("-fx-padding: 5;");
         
         // 为每个形状类型创建一个ShapeButton
         for (ShapeType shapeType : shapeTypes) {

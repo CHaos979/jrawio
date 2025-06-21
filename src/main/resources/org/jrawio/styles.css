@@ -17,3 +17,27 @@
 .shape-button-root:hover {
     -fx-background-color: #e0e0e0;
 }
+
+/* 左侧面板样式 */
+#leftPanel {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ShapeBar 标题面板样式 */
+.titled-pane {
+    -fx-text-fill: #495057;
+}
+
+.titled-pane > .title {
+    -fx-background-color: #e9ecef;
+    -fx-background-radius: 0;
+    -fx-padding: 8 12;
+}
+
+.titled-pane > .content {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
