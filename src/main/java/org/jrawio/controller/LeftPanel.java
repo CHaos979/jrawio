@@ -6,6 +6,7 @@ import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
+import org.jrawio.controller.shape.ShapeType;
 
 public class LeftPanel {
     @FXML
@@ -17,8 +18,12 @@ public class LeftPanel {
         shapeBarControllers.add(new ShapeBar.Builder()
                 .setTitle("基本图形")
                 .setExpanded(true)
+                .addShapeTypes(ShapeType.OVAL, ShapeType.RECTANGLE)
                 .build());
-        shapeBarControllers.add(new ShapeBar.Builder().setTitle("流程图").build());
+        shapeBarControllers.add(new ShapeBar.Builder()
+                .setTitle("流程图")
+                .addShapeType(ShapeType.RECTANGLE)
+                .build());
         shapeBarControllers.stream().forEach(leftPanel.getChildren()::add);
     }
 }

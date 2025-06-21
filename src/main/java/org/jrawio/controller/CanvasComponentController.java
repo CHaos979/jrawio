@@ -10,7 +10,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
-import org.jrawio.controller.shape.OvalShape;
+import org.jrawio.controller.shape.ShapeFactory;
 
 public class CanvasComponentController {
     @FXML
@@ -41,8 +41,18 @@ public class CanvasComponentController {
         // 允许拖拽进入
         canvasPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
-            if (db.hasString() && db.getString().equals("circle")) {
-                event.acceptTransferModes(TransferMode.COPY);
+            if (db.hasString()) {
+                // 检查是否为支持的形状类型
+                try {
+                    for (org.jrawio.controller.shape.ShapeType type : org.jrawio.controller.shape.ShapeType.values()) {
+                        if (type.getIdentifier().equals(db.getString())) {
+                            event.acceptTransferModes(TransferMode.COPY);
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    // 忽略异常
+                }
             }
             event.consume();
         });
@@ -51,14 +61,19 @@ public class CanvasComponentController {
         canvasPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-            if (db.hasString() && db.getString().equals("circle")) {
-                // 创建OvalShape对象
-                OvalShape shape = new OvalShape(80, 80);
-                // 设置放置位置
-                shape.setLayoutX(event.getX() - shape.getWidth() / 2);
-                shape.setLayoutY(event.getY() - shape.getHeight() / 2);
-                canvasPane.getChildren().add(shape);
-                success = true;
+            if (db.hasString()) {
+                try {
+                    // 使用ShapeFactory根据标识符创建Shape对象
+                    Shape shape = ShapeFactory.createShape(db.getString(), 80, 80);
+                    // 设置放置位置
+                    shape.setLayoutX(event.getX() - shape.getWidth() / 2);
+                    shape.setLayoutY(event.getY() - shape.getHeight() / 2);
+                    canvasPane.getChildren().add(shape);
+                    success = true;
+                } catch (IllegalArgumentException e) {
+                    // 不支持的形状类型，忽略
+                    System.err.println("不支持的形状类型: " + db.getString());
+                }
             }
             event.setDropCompleted(success);
             event.consume();
