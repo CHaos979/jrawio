@@ -27,9 +27,6 @@ public abstract class Shape extends Canvas {
 
     /** 操作状态机 */
     private final ShapeStateMachine stateMachine = new ShapeStateMachine();
-    
-    /** 控制点大小 */
-    private static final double HANDLE_SIZE = 6;
 
 
     /**
@@ -56,19 +53,11 @@ public abstract class Shape extends Canvas {
         private double orgSceneX, orgSceneY;
         
         /** 当前活动的控制点 */
-        private ResizeHandle activeHandle = null;
+        private ResizeHandleManager.ResizeHandle activeHandle = null;
         
         /** 原始尺寸和位置 */
         private double originalWidth, originalHeight;
         private double originalX, originalY;
-
-        /**
-         * 获取当前交互状态
-         * @return 当前交互状态
-         */
-        public InteractionState getCurrentState() {
-            return currentState;
-        }
 
         /**
          * 切换到空闲状态
@@ -100,7 +89,7 @@ public abstract class Shape extends Canvas {
          * @param x 原始X位置
          * @param y 原始Y位置
          */
-        public void toResizing(ResizeHandle handle, double sceneX, double sceneY,
+        public void toResizing(ResizeHandleManager.ResizeHandle handle, double sceneX, double sceneY,
                 double width, double height, double x, double y) {
             this.currentState = InteractionState.RESIZING;
             this.activeHandle = handle;
@@ -131,15 +120,6 @@ public abstract class Shape extends Canvas {
             this.orgSceneX = sceneX;
             this.orgSceneY = sceneY;
         }
-    }
-
-    /**
-     * 缩放控制点枚举
-     */
-    public enum ResizeHandle {
-        TOP_LEFT, TOP_CENTER, TOP_RIGHT,
-        MIDDLE_LEFT, MIDDLE_RIGHT,
-        BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT
     }
 
     /**
@@ -205,7 +185,7 @@ public abstract class Shape extends Canvas {
 
         // 检查是否点击在控制点上
         if (selected) {
-            ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
+            ResizeHandleManager.ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
             if (handle != null) {
                 stateMachine.toResizing(handle, event.getSceneX(), event.getSceneY(),
                         getWidth(), getHeight(), getLayoutX(), getLayoutY());
@@ -265,53 +245,19 @@ public abstract class Shape extends Canvas {
         double deltaX = event.getSceneX() - stateMachine.getOrgSceneX();
         double deltaY = event.getSceneY() - stateMachine.getOrgSceneY();
 
-        double newWidth = stateMachine.getOriginalWidth();
-        double newHeight = stateMachine.getOriginalHeight();
-        double newX = stateMachine.getOriginalX();
-        double newY = stateMachine.getOriginalY();
-
-        switch (stateMachine.getActiveHandle()) {
-            case TOP_LEFT:
-                newWidth = Math.max(20, stateMachine.getOriginalWidth() - deltaX);
-                newHeight = Math.max(20, stateMachine.getOriginalHeight() - deltaY);
-                newX = stateMachine.getOriginalX() + (stateMachine.getOriginalWidth() - newWidth);
-                newY = stateMachine.getOriginalY() + (stateMachine.getOriginalHeight() - newHeight);
-                break;
-            case TOP_CENTER:
-                newHeight = Math.max(20, stateMachine.getOriginalHeight() - deltaY);
-                newY = stateMachine.getOriginalY() + (stateMachine.getOriginalHeight() - newHeight);
-                break;
-            case TOP_RIGHT:
-                newWidth = Math.max(20, stateMachine.getOriginalWidth() + deltaX);
-                newHeight = Math.max(20, stateMachine.getOriginalHeight() - deltaY);
-                newY = stateMachine.getOriginalY() + (stateMachine.getOriginalHeight() - newHeight);
-                break;
-            case MIDDLE_LEFT:
-                newWidth = Math.max(20, stateMachine.getOriginalWidth() - deltaX);
-                newX = stateMachine.getOriginalX() + (stateMachine.getOriginalWidth() - newWidth);
-                break;
-            case MIDDLE_RIGHT:
-                newWidth = Math.max(20, stateMachine.getOriginalWidth() + deltaX);
-                break;
-            case BOTTOM_LEFT:
-                newWidth = Math.max(20, stateMachine.getOriginalWidth() - deltaX);
-                newHeight = Math.max(20, stateMachine.getOriginalHeight() + deltaY);
-                newX = stateMachine.getOriginalX() + (stateMachine.getOriginalWidth() - newWidth);
-                break;
-            case BOTTOM_CENTER:
-                newHeight = Math.max(20, stateMachine.getOriginalHeight() + deltaY);
-                break;
-            case BOTTOM_RIGHT:
-                newWidth = Math.max(20, stateMachine.getOriginalWidth() + deltaX);
-                newHeight = Math.max(20, stateMachine.getOriginalHeight() + deltaY);
-                break;
-        }
+        // 使用控制点管理器计算新的尺寸和位置
+        double[] newDimensions = ResizeHandleManager.calculateNewDimensions(
+                stateMachine.getActiveHandle(), deltaX, deltaY,
+                stateMachine.getOriginalWidth(), stateMachine.getOriginalHeight(),
+                stateMachine.getOriginalX(), stateMachine.getOriginalY(),
+                20 // 最小尺寸
+        );
 
         // 应用新的尺寸和位置
-        setShapeWidth(newWidth);
-        setShapeHeight(newHeight);
-        setLayoutX(newX);
-        setLayoutY(newY);
+        setShapeWidth(newDimensions[0]);  // newWidth
+        setShapeHeight(newDimensions[1]); // newHeight
+        setLayoutX(newDimensions[2]);     // newX
+        setLayoutY(newDimensions[3]);     // newY
 
         // 更新文本框位置
         if (textField != null) {
@@ -467,7 +413,7 @@ public abstract class Shape extends Canvas {
             gc.setLineWidth(1);
 
             // 绘制八个控制点
-            drawResizeHandles(gc, x, y, shapeWidth, shapeHeight);
+            ResizeHandleManager.drawResizeHandles(gc, x, y, shapeWidth, shapeHeight);
         }
 
         // 绘制文本
@@ -488,31 +434,6 @@ public abstract class Shape extends Canvas {
             double textY = textPosition[1];
 
             gc.fillText(text, textX, textY);
-        }
-    }
-
-    /**
-     * 绘制缩放控制点
-     * @param gc 图形上下文
-     * @param shapeX 图形X坐标
-     * @param shapeY 图形Y坐标
-     * @param shapeWidth 图形宽度
-     * @param shapeHeight 图形高度
-     */
-    private void drawResizeHandles(GraphicsContext gc, double shapeX, double shapeY, double shapeWidth,
-            double shapeHeight) {
-        gc.setFill(Color.WHITE);
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(1);
-
-        // 使用工具类计算控制点位置
-        double[][] handlePositions = ShapeGeometryUtils.calculateResizeHandlePositions(
-                shapeX, shapeY, shapeWidth, shapeHeight, HANDLE_SIZE);
-
-        // 绘制每个控制点
-        for (double[] pos : handlePositions) {
-            gc.fillRect(pos[0], pos[1], HANDLE_SIZE, HANDLE_SIZE);
-            gc.strokeRect(pos[0], pos[1], HANDLE_SIZE, HANDLE_SIZE);
         }
     }
 
@@ -546,9 +467,9 @@ public abstract class Shape extends Canvas {
             return;
         }
 
-        ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
+        ResizeHandleManager.ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
         if (handle != null) {
-            setCursor(getCursorForHandle(handle));
+            setCursor(ResizeHandleManager.getCursorForHandle(handle));
         } else {
             setCursor(Cursor.HAND);
         }
@@ -560,61 +481,12 @@ public abstract class Shape extends Canvas {
      * @param y 鼠标Y坐标
      * @return 控制点类型，如果不在控制点上则返回null
      */
-    private ResizeHandle getResizeHandleAt(double x, double y) {
+    private ResizeHandleManager.ResizeHandle getResizeHandleAt(double x, double y) {
         if (!selected)
             return null;
 
-        // 使用工具类计算绘制区域
         double padding = 4;
-        double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
-        double shapeX = drawingArea[0];
-        double shapeY = drawingArea[1];
-        double shapeWidth = drawingArea[2];
-        double shapeHeight = drawingArea[3];
-
-        // 使用工具类计算控制点位置
-        double[][] handlePositions = ShapeGeometryUtils.calculateResizeHandlePositions(
-                shapeX, shapeY, shapeWidth, shapeHeight, HANDLE_SIZE);
-
-        // 控制点类型数组，与位置数组对应
-        ResizeHandle[] handleTypes = {
-                ResizeHandle.TOP_LEFT, ResizeHandle.TOP_CENTER, ResizeHandle.TOP_RIGHT,
-                ResizeHandle.MIDDLE_LEFT, ResizeHandle.MIDDLE_RIGHT,
-                ResizeHandle.BOTTOM_LEFT, ResizeHandle.BOTTOM_CENTER, ResizeHandle.BOTTOM_RIGHT
-        };
-
-        // 检测每个控制点
-        for (int i = 0; i < handlePositions.length; i++) {
-            if (ShapeGeometryUtils.isPointInHandle(x, y, handlePositions[i][0], handlePositions[i][1], HANDLE_SIZE)) {
-                return handleTypes[i];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 根据控制点获取对应的鼠标光标
-     * @param handle 控制点类型
-     * @return 对应的光标类型
-     */
-    private Cursor getCursorForHandle(ResizeHandle handle) {
-        switch (handle) {
-            case TOP_LEFT:
-            case BOTTOM_RIGHT:
-                return Cursor.NW_RESIZE;
-            case TOP_CENTER:
-            case BOTTOM_CENTER:
-                return Cursor.N_RESIZE;
-            case TOP_RIGHT:
-            case BOTTOM_LEFT:
-                return Cursor.NE_RESIZE;
-            case MIDDLE_LEFT:
-            case MIDDLE_RIGHT:
-                return Cursor.W_RESIZE;
-            default:
-                return Cursor.DEFAULT;
-        }
+        return ResizeHandleManager.getResizeHandleAt(x, y, getWidth(), getHeight(), padding);
     }
 
     /**
