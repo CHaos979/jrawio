@@ -19,10 +19,9 @@ public abstract class Shape extends Canvas {
     private String text = this.toString(); // 文本
     private TextField textField; // 文本框控件
 
-    // 状态机实例
-    private final ShapeStateMachine stateMachine = new ShapeStateMachine();
-
+    private final ShapeStateMachine stateMachine = new ShapeStateMachine(); // 操作状态机
     private static final double HANDLE_SIZE = 6; // 控制点大小
+
 
     /**
      * 内部状态机类 - 管理Shape的交互状态
@@ -48,18 +47,6 @@ public abstract class Shape extends Canvas {
         // 状态查询API
         public InteractionState getCurrentState() {
             return currentState;
-        }
-
-        public boolean isIdle() {
-            return currentState == InteractionState.IDLE;
-        }
-
-        public boolean isDragging() {
-            return currentState == InteractionState.DRAGGING;
-        }
-
-        public boolean isResizing() {
-            return currentState == InteractionState.RESIZING;
         }
 
         // 状态转换API
@@ -169,11 +156,11 @@ public abstract class Shape extends Canvas {
     }
 
     private void handleDragged(MouseEvent event) {
-        if (stateMachine.isResizing() && stateMachine.getActiveHandle() != null) {
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING && stateMachine.getActiveHandle() != null) {
             handleResize(event);
         } else {
             // 如果当前不是拖动状态，先切换到拖动状态
-            if (stateMachine.isIdle()) {
+            if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.IDLE) {
                 stateMachine.toDragging(stateMachine.getOrgSceneX(), stateMachine.getOrgSceneY());
             }
             handleMove(event);
@@ -271,7 +258,8 @@ public abstract class Shape extends Canvas {
             event.consume();
             return;
         }
-        if (stateMachine.isDragging() || stateMachine.isResizing()) {
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING || 
+            stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
             // 如果是拖动或缩放后产生的点击，忽略
             stateMachine.toIdle();
             return;
@@ -495,7 +483,7 @@ public abstract class Shape extends Canvas {
     }
 
     private void handleMouseReleased(MouseEvent event) {
-        if (stateMachine.isResizing()) {
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
             resetResizeState();
             // 通知右侧面板更新尺寸信息
             RightPanel rightPanel = RightPanel.getInstance();
@@ -506,13 +494,4 @@ public abstract class Shape extends Canvas {
         event.consume();
     }
 
-    // 状态机访问器
-    public ShapeStateMachine getStateMachine() {
-        return stateMachine;
-    }
-
-    // 便捷的状态查询方法
-    public boolean isSelected() {
-        return selected;
-    }
 }
