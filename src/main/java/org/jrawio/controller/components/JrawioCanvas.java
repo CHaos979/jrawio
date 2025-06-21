@@ -79,60 +79,8 @@ public class JrawioCanvas {
             event.consume();
         });
 
-        // 初始化选区框
-        selectionRect.setStroke(Color.BLUE);
-        selectionRect.setStrokeWidth(1);
-        selectionRect.setFill(Color.web("rgba(100,100,255,0.2)"));
-        selectionRect.setVisible(false);
-        canvasPane.getChildren().add(selectionRect);
-
-        // 框选鼠标事件
-        canvasPane.setOnMousePressed(event -> {
-            // 只响应鼠标左键且不是拖拽Shape时
-            if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
-                startX = event.getX();
-                startY = event.getY();
-                selectionRect.setX(startX);
-                selectionRect.setY(startY);
-                selectionRect.setWidth(0);
-                selectionRect.setHeight(0);
-                selectionRect.setVisible(true);
-            }
-        });
-
-        canvasPane.setOnMouseDragged(event -> {
-            if (selectionRect.isVisible()) {
-                double x = Math.min(startX, event.getX());
-                double y = Math.min(startY, event.getY());
-                double w = Math.abs(event.getX() - startX);
-                double h = Math.abs(event.getY() - startY);
-                selectionRect.setX(x);
-                selectionRect.setY(y);
-                selectionRect.setWidth(w);
-                selectionRect.setHeight(h);
-            }
-        });
-
-        canvasPane.setOnMouseReleased(event -> {
-            if (selectionRect.isVisible()) {
-                // 框选结束，判断哪些Shape在选区内
-                for (javafx.scene.Node node : canvasPane.getChildren()) {
-                    if (node instanceof Shape) {
-                        Shape shape = (Shape) node;
-                        double sx = shape.getLayoutX();
-                        double sy = shape.getLayoutY();
-                        double sw = shape.getWidth();
-                        double sh = shape.getHeight();
-                        if (selectionRect.getBoundsInParent().intersects(sx, sy, sw, sh)) {
-                            shape.setSelected(true);
-                        } else {
-                            shape.setSelected(false);
-                        }
-                    }
-                }
-                selectionRect.setVisible(false);
-            }
-        });
+        // 初始化框选功能
+        initializeSelection();
 
         drawGrid();
     }
@@ -167,5 +115,106 @@ public class JrawioCanvas {
         dropShadow.setOffsetY(5);
         dropShadow.setColor(Color.rgb(50, 50, 50, 0.4));
         gridCanvas.setEffect(dropShadow);
+    }
+
+    /**
+     * 初始化框选功能
+     */
+    private void initializeSelection() {
+        setupSelectionRectangle();
+        setupSelectionMouseEvents();
+    }
+
+    /**
+     * 设置选区框的样式
+     */
+    private void setupSelectionRectangle() {
+        selectionRect.setStroke(Color.BLUE);
+        selectionRect.setStrokeWidth(1);
+        selectionRect.setFill(Color.web("rgba(100,100,255,0.2)"));
+        selectionRect.setVisible(false);
+        canvasPane.getChildren().add(selectionRect);
+    }
+
+    /**
+     * 设置框选相关的鼠标事件
+     */
+    private void setupSelectionMouseEvents() {
+        canvasPane.setOnMousePressed(this::onSelectionMousePressed);
+        canvasPane.setOnMouseDragged(this::onSelectionMouseDragged);
+        canvasPane.setOnMouseReleased(this::onSelectionMouseReleased);
+    }
+
+    /**
+     * 处理框选开始事件
+     */
+    private void onSelectionMousePressed(javafx.scene.input.MouseEvent event) {
+        // 只响应鼠标左键且不是拖拽Shape时
+        if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
+            startX = event.getX();
+            startY = event.getY();
+            selectionRect.setX(startX);
+            selectionRect.setY(startY);
+            selectionRect.setWidth(0);
+            selectionRect.setHeight(0);
+            selectionRect.setVisible(true);
+        }
+    }
+
+    /**
+     * 处理框选拖拽事件
+     */
+    private void onSelectionMouseDragged(javafx.scene.input.MouseEvent event) {
+        if (selectionRect.isVisible()) {
+            updateSelectionRectangle(event.getX(), event.getY());
+        }
+    }
+
+    /**
+     * 更新选区框的位置和大小
+     */
+    private void updateSelectionRectangle(double currentX, double currentY) {
+        double x = Math.min(startX, currentX);
+        double y = Math.min(startY, currentY);
+        double w = Math.abs(currentX - startX);
+        double h = Math.abs(currentY - startY);
+        selectionRect.setX(x);
+        selectionRect.setY(y);
+        selectionRect.setWidth(w);
+        selectionRect.setHeight(h);
+    }
+
+    /**
+     * 处理框选结束事件
+     */
+    private void onSelectionMouseReleased(javafx.scene.input.MouseEvent event) {
+        if (selectionRect.isVisible()) {
+            selectShapesInRectangle();
+            selectionRect.setVisible(false);
+        }
+    }
+
+    /**
+     * 选择在选区框内的所有Shape
+     */
+    private void selectShapesInRectangle() {
+        for (javafx.scene.Node node : canvasPane.getChildren()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                boolean isInSelection = isShapeInSelection(shape);
+                shape.setSelected(isInSelection);
+            }
+        }
+    }
+
+    /**
+     * 判断Shape是否在选区内
+     */
+    private boolean isShapeInSelection(Shape shape) {
+        double sx = shape.getLayoutX();
+        double sy = shape.getLayoutY();
+        double sw = shape.getWidth();
+        double sh = shape.getHeight();
+        return selectionRect.getBoundsInParent().intersects(sx, sy, sw, sh);
     }
 }

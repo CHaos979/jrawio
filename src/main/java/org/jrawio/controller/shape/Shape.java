@@ -20,7 +20,7 @@ public abstract class Shape extends Canvas {
     private static final Set<Shape> selectedShapes = new HashSet<>();
 
     /** 文本内容 */
-    private String text = this.toString();
+    private String text;
     
     /** 文本框控件 */
     private TextField textField;
