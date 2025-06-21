@@ -1,10 +1,10 @@
-package org.jrawio.controller;
+package org.jrawio.controller.components;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;
 
-public class CenterPanelController {
+public class CenterPanel {
     @FXML
     private ScrollPane centerScrollPane;
 

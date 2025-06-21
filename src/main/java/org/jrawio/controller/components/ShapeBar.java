@@ -1,4 +1,4 @@
-package org.jrawio.controller;
+package org.jrawio.controller.components;
 
 import java.io.IOException;
 import java.util.ArrayList;

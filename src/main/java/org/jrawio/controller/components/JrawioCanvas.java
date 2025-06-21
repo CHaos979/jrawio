@@ -1,4 +1,4 @@
-package org.jrawio.controller;
+package org.jrawio.controller.components;
 
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -12,7 +12,7 @@ import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeFactory;
 
-public class CanvasComponentController {
+public class JrawioCanvas {
     @FXML
     private Canvas gridCanvas;
 

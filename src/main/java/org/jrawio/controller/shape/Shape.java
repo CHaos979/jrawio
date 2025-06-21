@@ -7,7 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.Cursor;
-import org.jrawio.controller.RightPanel;
+import org.jrawio.controller.components.RightPanel;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;

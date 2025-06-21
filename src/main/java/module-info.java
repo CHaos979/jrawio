@@ -6,7 +6,7 @@ module jrawio {
 
     opens org.jrawio to javafx.fxml;
     exports org.jrawio;
-    opens org.jrawio.controller to javafx.fxml;
-    exports org.jrawio.controller;
+    opens org.jrawio.controller.components to javafx.fxml;
+    exports org.jrawio.controller.components;
     exports org.jrawio.controller.shape;
 }

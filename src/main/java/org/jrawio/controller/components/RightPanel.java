@@ -1,4 +1,4 @@
-package org.jrawio.controller;
+package org.jrawio.controller.components;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
