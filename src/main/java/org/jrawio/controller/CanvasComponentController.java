@@ -50,8 +50,8 @@ public class CanvasComponentController {
             Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasString() && db.getString().equals("circle")) {
-                // 创建Shape对象
-                Shape shape = new Shape(80, 80);
+                // 创建OvalShape对象
+                OvalShape shape = new OvalShape(80, 80);
                 // 设置放置位置
                 shape.setLayoutX(event.getX() - shape.getWidth() / 2);
                 shape.setLayoutY(event.getY() - shape.getHeight() / 2);

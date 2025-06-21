@@ -9,7 +9,7 @@ import javafx.scene.layout.Pane;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Shape extends Canvas {
+public abstract class Shape extends Canvas {
     private boolean selected = false; // 是否被选中
     private static final Set<Shape> selectedShapes = new HashSet<>(); // 被选中的所有图形
 
@@ -155,25 +155,35 @@ public class Shape extends Canvas {
         draw();
     }
 
+    /**
+     * 抽象方法：由子类实现具体的图形绘制逻辑
+     * @param gc 图形上下文
+     * @param x 绘制起始x坐标
+     * @param y 绘制起始y坐标
+     * @param width 绘制宽度
+     * @param height 绘制高度
+     */
+    protected abstract void drawShape(GraphicsContext gc, double x, double y, double width, double height);
+
     private void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 
-        // 画圆/椭圆
-        gc.setStroke(Color.BLACK);
-        gc.setLineWidth(1);
+        // 计算绘制区域
         double padding = 4;
-        double ovalWidth = getWidth() - 2 * padding;
-        double ovalHeight = getHeight() - 2 * padding;
+        double shapeWidth = getWidth() - 2 * padding;
+        double shapeHeight = getHeight() - 2 * padding;
         double x = padding;
         double y = padding;
-        gc.strokeOval(x, y, ovalWidth, ovalHeight);
+
+        // 调用子类实现的图形绘制方法
+        drawShape(gc, x, y, shapeWidth, shapeHeight);
 
         // 如果选中，画蓝色方框
         if (selected) {
             gc.setStroke(Color.BLUE);
             gc.setLineWidth(1);
-            gc.strokeRect(x, y, ovalWidth, ovalHeight);
+            gc.strokeRect(x, y, shapeWidth, shapeHeight);
         }
 
         // 画文本
