@@ -156,6 +156,8 @@ public abstract class Shape extends Canvas {
         this.setOnMouseClicked(this::handleClick);
         this.setOnMouseMoved(this::handleMouseMoved);
         this.setOnMouseReleased(this::handleMouseReleased);
+        this.setOnMouseEntered(this::handleMouseEntered);
+        this.setOnMouseExited(this::handleMouseExited);
     }
 
     /**
@@ -508,12 +510,32 @@ public abstract class Shape extends Canvas {
     }
 
     /**
+     * 处理鼠标进入事件
+     * @param event 鼠标事件
+     */
+    private void handleMouseEntered(MouseEvent event) {
+        // 如果没有选中，设置光标为手指
+        if (!selected) {
+            setCursor(Cursor.HAND);
+        }
+    }
+
+    /**
+     * 处理鼠标离开事件
+     * @param event 鼠标事件
+     */
+    private void handleMouseExited(MouseEvent event) {
+        // 鼠标离开时恢复默认光标
+        setCursor(Cursor.DEFAULT);
+    }
+
+    /**
      * 处理鼠标移动事件
      * @param event 鼠标事件
      */
     private void handleMouseMoved(MouseEvent event) {
         if (!selected) {
-            setCursor(Cursor.DEFAULT);
+            setCursor(Cursor.HAND);
             return;
         }
 
@@ -521,7 +543,7 @@ public abstract class Shape extends Canvas {
         if (handle != null) {
             setCursor(getCursorForHandle(handle));
         } else {
-            setCursor(Cursor.DEFAULT);
+            setCursor(Cursor.HAND);
         }
     }
 
