@@ -159,20 +159,21 @@ public class Shape extends Canvas {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 
-        // 画圆
+        // 画圆/椭圆
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
         double padding = 4;
-        double diameter = Math.min(getWidth(), getHeight()) - 2 * padding;
-        double x = (getWidth() - diameter) / 2;
-        double y = (getHeight() - diameter) / 2;
-        gc.strokeOval(x, y, diameter, diameter);
+        double ovalWidth = getWidth() - 2 * padding;
+        double ovalHeight = getHeight() - 2 * padding;
+        double x = padding;
+        double y = padding;
+        gc.strokeOval(x, y, ovalWidth, ovalHeight);
 
         // 如果选中，画蓝色方框
         if (selected) {
             gc.setStroke(Color.BLUE);
             gc.setLineWidth(1);
-            gc.strokeRect(x, y, diameter, diameter);
+            gc.strokeRect(x, y, ovalWidth, ovalHeight);
         }
 
         // 画文本
