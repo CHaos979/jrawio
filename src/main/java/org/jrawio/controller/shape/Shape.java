@@ -453,11 +453,18 @@ public abstract class Shape extends Canvas {
         // 调用子类实现的图形绘制方法
         drawShape(gc, x, y, shapeWidth, shapeHeight);
 
-        // 如果选中，画蓝色方框和控制点
+        // 如果选中，画蓝色虚线方框和控制点
         if (selected) {
             gc.setStroke(Color.BLUE);
-            gc.setLineWidth(1);
+            gc.setLineWidth(2); // 使用较粗的线条
+            
+            // 设置虚线样式
+            gc.setLineDashes(5, 5); // 虚线长度为5，间隔为5
             gc.strokeRect(x, y, shapeWidth, shapeHeight);
+            
+            // 重置为实线，用于绘制控制点
+            gc.setLineDashes(null);
+            gc.setLineWidth(1);
 
             // 绘制八个控制点
             drawResizeHandles(gc, x, y, shapeWidth, shapeHeight);
