@@ -378,12 +378,13 @@ public abstract class Shape extends Canvas {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 
-        // 计算绘制区域
+        // 使用工具类计算绘制区域
         double padding = 4;
-        double shapeWidth = getWidth() - 2 * padding;
-        double shapeHeight = getHeight() - 2 * padding;
-        double x = padding;
-        double y = padding;
+        double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
+        double x = drawingArea[0];
+        double y = drawingArea[1];
+        double shapeWidth = drawingArea[2];
+        double shapeHeight = drawingArea[3];
 
         // 调用子类实现的图形绘制方法
         drawShape(gc, x, y, shapeWidth, shapeHeight);
@@ -409,8 +410,12 @@ public abstract class Shape extends Canvas {
             tempText.setFont(font);
             double textWidth = tempText.getLayoutBounds().getWidth();
 
-            double textX = getWidth() / 2 - textWidth / 2;
-            double textY = getHeight() / 2 + 6;
+            // 使用工具类计算文本居中位置
+            double[] textPosition = ShapeGeometryUtils.calculateCenteredTextPosition(
+                    getWidth(), getHeight(), textWidth, 14);
+            double textX = textPosition[0];
+            double textY = textPosition[1];
+
             gc.fillText(text, textX, textY);
         }
     }
@@ -424,19 +429,9 @@ public abstract class Shape extends Canvas {
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(1);
 
-        double halfHandle = HANDLE_SIZE / 2;
-
-        // 八个控制点的位置
-        double[][] handlePositions = {
-                { shapeX - halfHandle, shapeY - halfHandle }, // TOP_LEFT
-                { shapeX + shapeWidth / 2 - halfHandle, shapeY - halfHandle }, // TOP_CENTER
-                { shapeX + shapeWidth - halfHandle, shapeY - halfHandle }, // TOP_RIGHT
-                { shapeX - halfHandle, shapeY + shapeHeight / 2 - halfHandle }, // MIDDLE_LEFT
-                { shapeX + shapeWidth - halfHandle, shapeY + shapeHeight / 2 - halfHandle }, // MIDDLE_RIGHT
-                { shapeX - halfHandle, shapeY + shapeHeight - halfHandle }, // BOTTOM_LEFT
-                { shapeX + shapeWidth / 2 - halfHandle, shapeY + shapeHeight - halfHandle }, // BOTTOM_CENTER
-                { shapeX + shapeWidth - halfHandle, shapeY + shapeHeight - halfHandle } // BOTTOM_RIGHT
-        };
+        // 使用工具类计算控制点位置
+        double[][] handlePositions = ShapeGeometryUtils.calculateResizeHandlePositions(
+                shapeX, shapeY, shapeWidth, shapeHeight, HANDLE_SIZE);
 
         // 绘制每个控制点
         for (double[] pos : handlePositions) {
@@ -466,57 +461,33 @@ public abstract class Shape extends Canvas {
         if (!selected)
             return null;
 
+        // 使用工具类计算绘制区域
         double padding = 4;
-        double shapeWidth = getWidth() - 2 * padding;
-        double shapeHeight = getHeight() - 2 * padding;
-        double shapeX = padding;
-        double shapeY = padding;
+        double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
+        double shapeX = drawingArea[0];
+        double shapeY = drawingArea[1];
+        double shapeWidth = drawingArea[2];
+        double shapeHeight = drawingArea[3];
 
-        // 检测八个控制点
-        double halfHandle = HANDLE_SIZE / 2;
+        // 使用工具类计算控制点位置
+        double[][] handlePositions = ShapeGeometryUtils.calculateResizeHandlePositions(
+                shapeX, shapeY, shapeWidth, shapeHeight, HANDLE_SIZE);
 
-        // 左上角
-        if (isPointInHandle(x, y, shapeX - halfHandle, shapeY - halfHandle)) {
-            return ResizeHandle.TOP_LEFT;
-        }
-        // 上中
-        if (isPointInHandle(x, y, shapeX + shapeWidth / 2 - halfHandle, shapeY - halfHandle)) {
-            return ResizeHandle.TOP_CENTER;
-        }
-        // 右上角
-        if (isPointInHandle(x, y, shapeX + shapeWidth - halfHandle, shapeY - halfHandle)) {
-            return ResizeHandle.TOP_RIGHT;
-        }
-        // 左中
-        if (isPointInHandle(x, y, shapeX - halfHandle, shapeY + shapeHeight / 2 - halfHandle)) {
-            return ResizeHandle.MIDDLE_LEFT;
-        }
-        // 右中
-        if (isPointInHandle(x, y, shapeX + shapeWidth - halfHandle, shapeY + shapeHeight / 2 - halfHandle)) {
-            return ResizeHandle.MIDDLE_RIGHT;
-        }
-        // 左下角
-        if (isPointInHandle(x, y, shapeX - halfHandle, shapeY + shapeHeight - halfHandle)) {
-            return ResizeHandle.BOTTOM_LEFT;
-        }
-        // 下中
-        if (isPointInHandle(x, y, shapeX + shapeWidth / 2 - halfHandle, shapeY + shapeHeight - halfHandle)) {
-            return ResizeHandle.BOTTOM_CENTER;
-        }
-        // 右下角
-        if (isPointInHandle(x, y, shapeX + shapeWidth - halfHandle, shapeY + shapeHeight - halfHandle)) {
-            return ResizeHandle.BOTTOM_RIGHT;
+        // 控制点类型数组，与位置数组对应
+        ResizeHandle[] handleTypes = {
+                ResizeHandle.TOP_LEFT, ResizeHandle.TOP_CENTER, ResizeHandle.TOP_RIGHT,
+                ResizeHandle.MIDDLE_LEFT, ResizeHandle.MIDDLE_RIGHT,
+                ResizeHandle.BOTTOM_LEFT, ResizeHandle.BOTTOM_CENTER, ResizeHandle.BOTTOM_RIGHT
+        };
+
+        // 检测每个控制点
+        for (int i = 0; i < handlePositions.length; i++) {
+            if (ShapeGeometryUtils.isPointInHandle(x, y, handlePositions[i][0], handlePositions[i][1], HANDLE_SIZE)) {
+                return handleTypes[i];
+            }
         }
 
         return null;
-    }
-
-    /**
-     * 检测点是否在控制点区域内
-     */
-    private boolean isPointInHandle(double x, double y, double handleX, double handleY) {
-        return x >= handleX && x <= handleX + HANDLE_SIZE &&
-                y >= handleY && y <= handleY + HANDLE_SIZE;
     }
 
     /**
