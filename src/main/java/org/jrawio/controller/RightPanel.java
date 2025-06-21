@@ -29,7 +29,7 @@ public class RightPanel {
             rightPanelRoot.getChildren().add(new Label("未选中任何图形"));
         } else {
             for (Shape shape : selectedShapes) {
-                Label label = new Label("属性：");
+                Label label = new Label("文本：");
                 TextField input = new TextField(shape.getText());
                 input.setPrefWidth(120);
                 input.setOnAction(e -> shape.setText(input.getText()));
