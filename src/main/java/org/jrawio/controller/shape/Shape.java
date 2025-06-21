@@ -18,17 +18,113 @@ public abstract class Shape extends Canvas {
     private String text = this.toString(); // 文本
     private TextField textField; // 文本框控件
 
-    // 拖动相关成员变量
-    private double orgSceneX, orgSceneY;
-    private boolean dragging = false; // 新增：是否正在拖动
-    
-    // 缩放相关成员变量
-    private boolean resizing = false; // 是否正在缩放
-    private ResizeHandle activeHandle = null; // 当前活跃的缩放控制点
-    private double originalWidth, originalHeight; // 原始尺寸
-    private double originalX, originalY; // 原始位置
+    // 状态机实例
+    private final ShapeStateMachine stateMachine = new ShapeStateMachine();
+
     private static final double HANDLE_SIZE = 6; // 控制点大小
-    
+
+    /**
+     * 内部状态机类 - 管理Shape的交互状态
+     */
+    public static class ShapeStateMachine {
+        // 互斥的交互状态枚举
+        public enum InteractionState {
+            IDLE, // 空闲状态
+            DRAGGING, // 拖动状态
+            RESIZING // 缩放状态
+        }
+
+        // 当前交互状态
+        private InteractionState currentState = InteractionState.IDLE;
+
+        // 状态相关数据
+        private double orgSceneX, orgSceneY;
+        private ResizeHandle activeHandle = null;
+        private double originalWidth, originalHeight;
+        private double originalX, originalY;
+
+        // 状态查询API
+        public InteractionState getCurrentState() {
+            return currentState;
+        }
+
+        public boolean isIdle() {
+            return currentState == InteractionState.IDLE;
+        }
+
+        public boolean isDragging() {
+            return currentState == InteractionState.DRAGGING;
+        }
+
+        public boolean isResizing() {
+            return currentState == InteractionState.RESIZING;
+        }
+
+        public ResizeHandle getActiveHandle() {
+            return activeHandle;
+        }
+
+        public double getOrgSceneX() {
+            return orgSceneX;
+        }
+
+        public double getOrgSceneY() {
+            return orgSceneY;
+        }
+
+        public double getOriginalWidth() {
+            return originalWidth;
+        }
+
+        public double getOriginalHeight() {
+            return originalHeight;
+        }
+
+        public double getOriginalX() {
+            return originalX;
+        }
+
+        public double getOriginalY() {
+            return originalY;
+        }
+
+        // 状态转换API
+        public void toIdle() {
+            this.currentState = InteractionState.IDLE;
+            this.activeHandle = null;
+        }
+
+        public void toDragging(double sceneX, double sceneY) {
+            this.currentState = InteractionState.DRAGGING;
+            this.orgSceneX = sceneX;
+            this.orgSceneY = sceneY;
+            this.activeHandle = null;
+        }
+
+        public void toResizing(ResizeHandle handle, double sceneX, double sceneY,
+                double width, double height, double x, double y) {
+            this.currentState = InteractionState.RESIZING;
+            this.activeHandle = handle;
+            this.orgSceneX = sceneX;
+            this.orgSceneY = sceneY;
+            this.originalWidth = width;
+            this.originalHeight = height;
+            this.originalX = x;
+            this.originalY = y;
+        }
+
+        // 状态内数据更新API
+        public void updateOrgScene(double sceneX, double sceneY) {
+            this.orgSceneX = sceneX;
+            this.orgSceneY = sceneY;
+        }
+
+        public void prepareForInteraction(double sceneX, double sceneY) {
+            this.orgSceneX = sceneX;
+            this.orgSceneY = sceneY;
+        }
+    }
+
     // 缩放控制点枚举
     public enum ResizeHandle {
         TOP_LEFT, TOP_CENTER, TOP_RIGHT,
@@ -76,22 +172,16 @@ public abstract class Shape extends Canvas {
     }
 
     private void handlePressed(MouseEvent event) {
-        System.out.println("[handlePressed]"+this.toString());
+        System.out.println("[handlePressed]" + this.toString());
         this.toFront();
-        orgSceneX = event.getSceneX();
-        orgSceneY = event.getSceneY();
-        dragging = false;
-        resizing = false;
+        stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
 
         // 检查是否点击在控制点上
         if (selected) {
-            activeHandle = getResizeHandleAt(event.getX(), event.getY());
-            if (activeHandle != null) {
-                resizing = true;
-                originalWidth = getWidth();
-                originalHeight = getHeight();
-                originalX = getLayoutX();
-                originalY = getLayoutY();
+            ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
+            if (handle != null) {
+                stateMachine.toResizing(handle, event.getSceneX(), event.getSceneY(),
+                        getWidth(), getHeight(), getLayoutX(), getLayoutY());
                 event.consume();
                 return;
             }
@@ -105,20 +195,24 @@ public abstract class Shape extends Canvas {
     }
 
     private void handleDragged(MouseEvent event) {
-        if (resizing && activeHandle != null) {
+        if (stateMachine.isResizing() && stateMachine.getActiveHandle() != null) {
             handleResize(event);
         } else {
+            // 如果当前不是拖动状态，先切换到拖动状态
+            if (stateMachine.isIdle()) {
+                stateMachine.toDragging(stateMachine.getOrgSceneX(), stateMachine.getOrgSceneY());
+            }
             handleMove(event);
         }
         event.consume();
     }
-    
+
     /**
      * 处理移动操作
      */
     private void handleMove(MouseEvent event) {
-        double offsetX = event.getSceneX() - orgSceneX;
-        double offsetY = event.getSceneY() - orgSceneY;
+        double offsetX = event.getSceneX() - stateMachine.getOrgSceneX();
+        double offsetY = event.getSceneY() - stateMachine.getOrgSceneY();
         // 同步移动所有被选中的Shape
         for (Shape shape : selectedShapes) {
             shape.setLayoutX(shape.getLayoutX() + offsetX);
@@ -130,66 +224,64 @@ public abstract class Shape extends Canvas {
                 shape.textField.setLayoutY(shape.getLayoutY() + shape.getHeight() / 2 - 12);
             }
         }
-        orgSceneX = event.getSceneX();
-        orgSceneY = event.getSceneY();
-        dragging = true; // 拖动时设置为true
+        stateMachine.updateOrgScene(event.getSceneX(), event.getSceneY());
     }
-    
+
     /**
      * 处理缩放操作
      */
     private void handleResize(MouseEvent event) {
-        double deltaX = event.getSceneX() - orgSceneX;
-        double deltaY = event.getSceneY() - orgSceneY;
-        
-        double newWidth = originalWidth;
-        double newHeight = originalHeight;
-        double newX = originalX;
-        double newY = originalY;
-        
-        switch (activeHandle) {
+        double deltaX = event.getSceneX() - stateMachine.getOrgSceneX();
+        double deltaY = event.getSceneY() - stateMachine.getOrgSceneY();
+
+        double newWidth = stateMachine.getOriginalWidth();
+        double newHeight = stateMachine.getOriginalHeight();
+        double newX = stateMachine.getOriginalX();
+        double newY = stateMachine.getOriginalY();
+
+        switch (stateMachine.getActiveHandle()) {
             case TOP_LEFT:
-                newWidth = Math.max(20, originalWidth - deltaX);
-                newHeight = Math.max(20, originalHeight - deltaY);
-                newX = originalX + (originalWidth - newWidth);
-                newY = originalY + (originalHeight - newHeight);
+                newWidth = Math.max(20, stateMachine.getOriginalWidth() - deltaX);
+                newHeight = Math.max(20, stateMachine.getOriginalHeight() - deltaY);
+                newX = stateMachine.getOriginalX() + (stateMachine.getOriginalWidth() - newWidth);
+                newY = stateMachine.getOriginalY() + (stateMachine.getOriginalHeight() - newHeight);
                 break;
             case TOP_CENTER:
-                newHeight = Math.max(20, originalHeight - deltaY);
-                newY = originalY + (originalHeight - newHeight);
+                newHeight = Math.max(20, stateMachine.getOriginalHeight() - deltaY);
+                newY = stateMachine.getOriginalY() + (stateMachine.getOriginalHeight() - newHeight);
                 break;
             case TOP_RIGHT:
-                newWidth = Math.max(20, originalWidth + deltaX);
-                newHeight = Math.max(20, originalHeight - deltaY);
-                newY = originalY + (originalHeight - newHeight);
+                newWidth = Math.max(20, stateMachine.getOriginalWidth() + deltaX);
+                newHeight = Math.max(20, stateMachine.getOriginalHeight() - deltaY);
+                newY = stateMachine.getOriginalY() + (stateMachine.getOriginalHeight() - newHeight);
                 break;
             case MIDDLE_LEFT:
-                newWidth = Math.max(20, originalWidth - deltaX);
-                newX = originalX + (originalWidth - newWidth);
+                newWidth = Math.max(20, stateMachine.getOriginalWidth() - deltaX);
+                newX = stateMachine.getOriginalX() + (stateMachine.getOriginalWidth() - newWidth);
                 break;
             case MIDDLE_RIGHT:
-                newWidth = Math.max(20, originalWidth + deltaX);
+                newWidth = Math.max(20, stateMachine.getOriginalWidth() + deltaX);
                 break;
             case BOTTOM_LEFT:
-                newWidth = Math.max(20, originalWidth - deltaX);
-                newHeight = Math.max(20, originalHeight + deltaY);
-                newX = originalX + (originalWidth - newWidth);
+                newWidth = Math.max(20, stateMachine.getOriginalWidth() - deltaX);
+                newHeight = Math.max(20, stateMachine.getOriginalHeight() + deltaY);
+                newX = stateMachine.getOriginalX() + (stateMachine.getOriginalWidth() - newWidth);
                 break;
             case BOTTOM_CENTER:
-                newHeight = Math.max(20, originalHeight + deltaY);
+                newHeight = Math.max(20, stateMachine.getOriginalHeight() + deltaY);
                 break;
             case BOTTOM_RIGHT:
-                newWidth = Math.max(20, originalWidth + deltaX);
-                newHeight = Math.max(20, originalHeight + deltaY);
+                newWidth = Math.max(20, stateMachine.getOriginalWidth() + deltaX);
+                newHeight = Math.max(20, stateMachine.getOriginalHeight() + deltaY);
                 break;
         }
-        
+
         // 应用新的尺寸和位置
         setShapeWidth(newWidth);
         setShapeHeight(newHeight);
         setLayoutX(newX);
         setLayoutY(newY);
-        
+
         // 更新文本框位置
         if (textField != null) {
             textField.setLayoutX(getLayoutX() + 4);
@@ -205,11 +297,9 @@ public abstract class Shape extends Canvas {
             event.consume();
             return;
         }
-        if (dragging || resizing) {
+        if (stateMachine.isDragging() || stateMachine.isResizing()) {
             // 如果是拖动或缩放后产生的点击，忽略
-            dragging = false;
-            resizing = false;
-            activeHandle = null;
+            stateMachine.toIdle();
             return;
         }
 
@@ -219,7 +309,7 @@ public abstract class Shape extends Canvas {
             // 多选：切换当前 shape 的选中状态，不影响其他 shape
             setSelected(!selected);
         } else {
-            // 单选：取消其他 shape 的选中，只选中当
+            // 单选：取消其他 shape 的选中，只选中当前的
             System.out.println("[handleClick] cancel select other shape");
             for (Shape shape : selectedShapes.toArray(new Shape[0])) {
                 shape.setSelected(false);
@@ -250,6 +340,7 @@ public abstract class Shape extends Canvas {
     public String getText() {
         return text;
     }
+
     public void setText(String text) {
         this.text = text;
         draw();
@@ -259,6 +350,7 @@ public abstract class Shape extends Canvas {
         super.setWidth(width);
         draw();
     }
+
     public void setShapeHeight(double height) {
         super.setHeight(height);
         draw();
@@ -266,14 +358,15 @@ public abstract class Shape extends Canvas {
 
     /**
      * 抽象方法：由子类实现具体的图形绘制逻辑
-     * @param gc 图形上下文
-     * @param x 绘制起始x坐标
-     * @param y 绘制起始y坐标
-     * @param width 绘制宽度
+     * 
+     * @param gc     图形上下文
+     * @param x      绘制起始x坐标
+     * @param y      绘制起始y坐标
+     * @param width  绘制宽度
      * @param height 绘制高度
      */
     protected abstract void drawShape(GraphicsContext gc, double x, double y, double width, double height);
-    
+
     /**
      * 公共方法：用于预览绘制（不包含选中状态和文本）
      */
@@ -300,7 +393,7 @@ public abstract class Shape extends Canvas {
             gc.setStroke(Color.BLUE);
             gc.setLineWidth(1);
             gc.strokeRect(x, y, shapeWidth, shapeHeight);
-            
+
             // 绘制八个控制点
             drawResizeHandles(gc, x, y, shapeWidth, shapeHeight);
         }
@@ -321,29 +414,30 @@ public abstract class Shape extends Canvas {
             gc.fillText(text, textX, textY);
         }
     }
-    
+
     /**
      * 绘制缩放控制点
      */
-    private void drawResizeHandles(GraphicsContext gc, double shapeX, double shapeY, double shapeWidth, double shapeHeight) {
+    private void drawResizeHandles(GraphicsContext gc, double shapeX, double shapeY, double shapeWidth,
+            double shapeHeight) {
         gc.setFill(Color.WHITE);
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(1);
-        
+
         double halfHandle = HANDLE_SIZE / 2;
-        
+
         // 八个控制点的位置
         double[][] handlePositions = {
-            {shapeX - halfHandle, shapeY - halfHandle}, // TOP_LEFT
-            {shapeX + shapeWidth / 2 - halfHandle, shapeY - halfHandle}, // TOP_CENTER
-            {shapeX + shapeWidth - halfHandle, shapeY - halfHandle}, // TOP_RIGHT
-            {shapeX - halfHandle, shapeY + shapeHeight / 2 - halfHandle}, // MIDDLE_LEFT
-            {shapeX + shapeWidth - halfHandle, shapeY + shapeHeight / 2 - halfHandle}, // MIDDLE_RIGHT
-            {shapeX - halfHandle, shapeY + shapeHeight - halfHandle}, // BOTTOM_LEFT
-            {shapeX + shapeWidth / 2 - halfHandle, shapeY + shapeHeight - halfHandle}, // BOTTOM_CENTER
-            {shapeX + shapeWidth - halfHandle, shapeY + shapeHeight - halfHandle} // BOTTOM_RIGHT
+                { shapeX - halfHandle, shapeY - halfHandle }, // TOP_LEFT
+                { shapeX + shapeWidth / 2 - halfHandle, shapeY - halfHandle }, // TOP_CENTER
+                { shapeX + shapeWidth - halfHandle, shapeY - halfHandle }, // TOP_RIGHT
+                { shapeX - halfHandle, shapeY + shapeHeight / 2 - halfHandle }, // MIDDLE_LEFT
+                { shapeX + shapeWidth - halfHandle, shapeY + shapeHeight / 2 - halfHandle }, // MIDDLE_RIGHT
+                { shapeX - halfHandle, shapeY + shapeHeight - halfHandle }, // BOTTOM_LEFT
+                { shapeX + shapeWidth / 2 - halfHandle, shapeY + shapeHeight - halfHandle }, // BOTTOM_CENTER
+                { shapeX + shapeWidth - halfHandle, shapeY + shapeHeight - halfHandle } // BOTTOM_RIGHT
         };
-        
+
         // 绘制每个控制点
         for (double[] pos : handlePositions) {
             gc.fillRect(pos[0], pos[1], HANDLE_SIZE, HANDLE_SIZE);
@@ -356,7 +450,7 @@ public abstract class Shape extends Canvas {
             setCursor(Cursor.DEFAULT);
             return;
         }
-        
+
         ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
         if (handle != null) {
             setCursor(getCursorForHandle(handle));
@@ -364,22 +458,23 @@ public abstract class Shape extends Canvas {
             setCursor(Cursor.DEFAULT);
         }
     }
-    
+
     /**
      * 检测鼠标位置是否在某个控制点上
      */
     private ResizeHandle getResizeHandleAt(double x, double y) {
-        if (!selected) return null;
-        
+        if (!selected)
+            return null;
+
         double padding = 4;
         double shapeWidth = getWidth() - 2 * padding;
         double shapeHeight = getHeight() - 2 * padding;
         double shapeX = padding;
         double shapeY = padding;
-        
+
         // 检测八个控制点
         double halfHandle = HANDLE_SIZE / 2;
-        
+
         // 左上角
         if (isPointInHandle(x, y, shapeX - halfHandle, shapeY - halfHandle)) {
             return ResizeHandle.TOP_LEFT;
@@ -412,18 +507,18 @@ public abstract class Shape extends Canvas {
         if (isPointInHandle(x, y, shapeX + shapeWidth - halfHandle, shapeY + shapeHeight - halfHandle)) {
             return ResizeHandle.BOTTOM_RIGHT;
         }
-        
+
         return null;
     }
-    
+
     /**
      * 检测点是否在控制点区域内
      */
     private boolean isPointInHandle(double x, double y, double handleX, double handleY) {
-        return x >= handleX && x <= handleX + HANDLE_SIZE && 
-               y >= handleY && y <= handleY + HANDLE_SIZE;
+        return x >= handleX && x <= handleX + HANDLE_SIZE &&
+                y >= handleY && y <= handleY + HANDLE_SIZE;
     }
-    
+
     /**
      * 根据控制点获取对应的鼠标光标
      */
@@ -445,18 +540,17 @@ public abstract class Shape extends Canvas {
                 return Cursor.DEFAULT;
         }
     }
-    
+
     /**
      * 重置缩放状态
      */
     private void resetResizeState() {
-        resizing = false;
-        activeHandle = null;
+        stateMachine.toIdle();
         setCursor(Cursor.DEFAULT);
     }
 
     private void handleMouseReleased(MouseEvent event) {
-        if (resizing) {
+        if (stateMachine.isResizing()) {
             resetResizeState();
             // 通知右侧面板更新尺寸信息
             RightPanel rightPanel = RightPanel.getInstance();
@@ -465,5 +559,15 @@ public abstract class Shape extends Canvas {
             }
         }
         event.consume();
+    }
+
+    // 状态机访问器
+    public ShapeStateMachine getStateMachine() {
+        return stateMachine;
+    }
+
+    // 便捷的状态查询方法
+    public boolean isSelected() {
+        return selected;
     }
 }
