@@ -11,8 +11,10 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeFactory;
+import java.util.Arrays;
+import java.util.List;
 
-public class JrawioCanvas implements CanvasContextMenu.CanvasMenuCallback {
+public class JrawioCanvas {
     @FXML
     private Canvas gridCanvas;
 
@@ -24,7 +26,7 @@ public class JrawioCanvas implements CanvasContextMenu.CanvasMenuCallback {
     private double startX, startY;
     
     // 右键菜单
-    private CanvasContextMenu canvasContextMenu;
+    private RightClickMenu canvasContextMenu;
 
     @FXML
     public void initialize() {
@@ -181,7 +183,7 @@ public class JrawioCanvas implements CanvasContextMenu.CanvasMenuCallback {
      * 设置框选相关的鼠标事件
      */
     private void setupSelectionMouseEvents() {
-        // 鼠标按下事件已在 initializeContextMenu 中设置
+        // 鼠标按下事件在 setupCanvasMouseEvents 中统一设置
         canvasPane.setOnMouseDragged(this::onSelectionMouseDragged);
         canvasPane.setOnMouseReleased(this::onSelectionMouseReleased);
     }
@@ -247,34 +249,66 @@ public class JrawioCanvas implements CanvasContextMenu.CanvasMenuCallback {
      * 初始化右键菜单
      */
     private void initializeContextMenu() {
-        canvasContextMenu = new CanvasContextMenu(canvasPane);
-        canvasContextMenu.setCallback(this);
+        // 创建菜单项配置列表
+        List<RightClickMenu.MenuItemConfig> menuItems = Arrays.asList(
+            // 全选菜单项
+            RightClickMenu.menuItem("全选", this::selectAllShapes),
+            
+            // 分隔符
+            RightClickMenu.separator(),
+            
+            // 粘贴菜单项
+            RightClickMenu.menuItem("粘贴", this::pasteFromClipboard)
+        );
+        
+        // 创建右键菜单
+        canvasContextMenu = new RightClickMenu(canvasPane, menuItems);
         
         // 设置鼠标事件处理
-        canvasPane.setOnMousePressed(event -> {
-            if (canvasContextMenu.isShowing()) {
-                canvasContextMenu.hide();
-            }
-            // 只响应鼠标左键且不是拖拽Shape时
-            if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
-                startX = event.getX();
-                startY = event.getY();
-                selectionRect.setX(startX);
-                selectionRect.setY(startY);
-                selectionRect.setWidth(0);
-                selectionRect.setHeight(0);
-                selectionRect.setVisible(true);
-            }
-        });
+        setupCanvasMouseEvents();
+    }
+
+    /**
+     * 设置画布鼠标事件处理
+     */
+    private void setupCanvasMouseEvents() {
+        canvasPane.setOnMousePressed(this::onCanvasMousePressed);
+    }
+
+    /**
+     * 处理画布鼠标按下事件
+     */
+    private void onCanvasMousePressed(javafx.scene.input.MouseEvent event) {
+        // 隐藏右键菜单（如果正在显示）
+        if (canvasContextMenu.isShowing()) {
+            canvasContextMenu.hide();
+        }
+        
+        // 只响应鼠标左键且点击目标是画布本身（不是拖拽Shape）
+        if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
+            startSelectionBox(event.getX(), event.getY());
+        }
+    }
+
+    /**
+     * 开始框选操作
+     */
+    private void startSelectionBox(double x, double y) {
+        startX = x;
+        startY = y;
+        selectionRect.setX(startX);
+        selectionRect.setY(startY);
+        selectionRect.setWidth(0);
+        selectionRect.setHeight(0);
+        selectionRect.setVisible(true);
     }
     
-    // 实现 CanvasMenuCallback 接口方法
+    // 右键菜单操作方法
     
     /**
      * 全选功能实现
      */
-    @Override
-    public void onSelectAll() {
+    private void selectAllShapes() {
         for (javafx.scene.Node node : canvasPane.getChildren()) {
             if (node instanceof Shape) {
                 Shape shape = (Shape) node;
@@ -286,8 +320,7 @@ public class JrawioCanvas implements CanvasContextMenu.CanvasMenuCallback {
     /**
      * 粘贴功能实现
      */
-    @Override
-    public void onPaste() {
+    private void pasteFromClipboard() {
         // TODO: 实现粘贴功能
         System.out.println("粘贴功能待实现");
     }
