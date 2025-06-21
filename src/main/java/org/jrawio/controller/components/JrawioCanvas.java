@@ -3,9 +3,6 @@ package org.jrawio.controller.components;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -15,7 +12,7 @@ import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeFactory;
 
-public class JrawioCanvas {
+public class JrawioCanvas implements CanvasContextMenu.CanvasMenuCallback {
     @FXML
     private Canvas gridCanvas;
 
@@ -27,7 +24,7 @@ public class JrawioCanvas {
     private double startX, startY;
     
     // 右键菜单
-    private ContextMenu contextMenu;
+    private CanvasContextMenu canvasContextMenu;
 
     @FXML
     public void initialize() {
@@ -174,6 +171,8 @@ public class JrawioCanvas {
         selectionRect.setStroke(Color.BLUE);
         selectionRect.setStrokeWidth(1);
         selectionRect.setFill(Color.web("rgba(100,100,255,0.2)"));
+        // 设置虚线样式
+        selectionRect.getStrokeDashArray().addAll(5d, 5d);
         selectionRect.setVisible(false);
         canvasPane.getChildren().add(selectionRect);
     }
@@ -248,38 +247,13 @@ public class JrawioCanvas {
      * 初始化右键菜单
      */
     private void initializeContextMenu() {
-        contextMenu = new ContextMenu();
+        canvasContextMenu = new CanvasContextMenu(canvasPane);
+        canvasContextMenu.setCallback(this);
         
-        // 为右键菜单添加样式类
-        contextMenu.getStyleClass().add("context-menu");
-        
-        // 全选菜单项
-        MenuItem selectAllItem = new MenuItem("全选");
-        selectAllItem.setOnAction(event -> selectAllShapes());
-        
-        // 分隔符
-        SeparatorMenuItem separator = new SeparatorMenuItem();
-        
-        // 粘贴菜单项
-        MenuItem pasteItem = new MenuItem("粘贴");
-        pasteItem.setOnAction(event -> pasteShapes());
-        
-        // 添加菜单项到右键菜单
-        contextMenu.getItems().addAll(selectAllItem, separator, pasteItem);
-        
-        // 设置右键菜单事件
-        canvasPane.setOnContextMenuRequested(event -> {
-            // 只在点击画布空白区域时显示右键菜单
-            if (event.getTarget() == canvasPane) {
-                contextMenu.show(canvasPane, event.getScreenX(), event.getScreenY());
-            }
-            event.consume();
-        });
-        
-        // 点击其他地方时隐藏右键菜单
+        // 设置鼠标事件处理
         canvasPane.setOnMousePressed(event -> {
-            if (contextMenu.isShowing()) {
-                contextMenu.hide();
+            if (canvasContextMenu.isShowing()) {
+                canvasContextMenu.hide();
             }
             // 只响应鼠标左键且不是拖拽Shape时
             if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
@@ -294,18 +268,26 @@ public class JrawioCanvas {
         });
     }
     
+    // 实现 CanvasMenuCallback 接口方法
+    
     /**
-     * 全选功能的占位实现
+     * 全选功能实现
      */
-    private void selectAllShapes() {
-        // TODO: 实现全选功能
-        System.out.println("全选功能待实现");
+    @Override
+    public void onSelectAll() {
+        for (javafx.scene.Node node : canvasPane.getChildren()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                shape.setSelected(true);
+            }
+        }
     }
     
     /**
-     * 粘贴功能的占位实现
+     * 粘贴功能实现
      */
-    private void pasteShapes() {
+    @Override
+    public void onPaste() {
         // TODO: 实现粘贴功能
         System.out.println("粘贴功能待实现");
     }
