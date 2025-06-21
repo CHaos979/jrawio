@@ -3,6 +3,9 @@ package org.jrawio.controller.components;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -22,6 +25,9 @@ public class JrawioCanvas {
     // 框选相关成员变量
     private Rectangle selectionRect = new Rectangle();
     private double startX, startY;
+    
+    // 右键菜单
+    private ContextMenu contextMenu;
 
     @FXML
     public void initialize() {
@@ -78,6 +84,9 @@ public class JrawioCanvas {
             event.setDropCompleted(success);
             event.consume();
         });
+
+        // 初始化右键菜单
+        initializeContextMenu();
 
         // 初始化框选功能
         initializeSelection();
@@ -140,25 +149,9 @@ public class JrawioCanvas {
      * 设置框选相关的鼠标事件
      */
     private void setupSelectionMouseEvents() {
-        canvasPane.setOnMousePressed(this::onSelectionMousePressed);
+        // 鼠标按下事件已在 initializeContextMenu 中设置
         canvasPane.setOnMouseDragged(this::onSelectionMouseDragged);
         canvasPane.setOnMouseReleased(this::onSelectionMouseReleased);
-    }
-
-    /**
-     * 处理框选开始事件
-     */
-    private void onSelectionMousePressed(javafx.scene.input.MouseEvent event) {
-        // 只响应鼠标左键且不是拖拽Shape时
-        if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
-            startX = event.getX();
-            startY = event.getY();
-            selectionRect.setX(startX);
-            selectionRect.setY(startY);
-            selectionRect.setWidth(0);
-            selectionRect.setHeight(0);
-            selectionRect.setVisible(true);
-        }
     }
 
     /**
@@ -216,5 +209,71 @@ public class JrawioCanvas {
         double sw = shape.getWidth();
         double sh = shape.getHeight();
         return selectionRect.getBoundsInParent().intersects(sx, sy, sw, sh);
+    }
+
+    /**
+     * 初始化右键菜单
+     */
+    private void initializeContextMenu() {
+        contextMenu = new ContextMenu();
+        
+        // 为右键菜单添加样式类
+        contextMenu.getStyleClass().add("context-menu");
+        
+        // 全选菜单项
+        MenuItem selectAllItem = new MenuItem("全选");
+        selectAllItem.setOnAction(event -> selectAllShapes());
+        
+        // 分隔符
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+        
+        // 粘贴菜单项
+        MenuItem pasteItem = new MenuItem("粘贴");
+        pasteItem.setOnAction(event -> pasteShapes());
+        
+        // 添加菜单项到右键菜单
+        contextMenu.getItems().addAll(selectAllItem, separator, pasteItem);
+        
+        // 设置右键菜单事件
+        canvasPane.setOnContextMenuRequested(event -> {
+            // 只在点击画布空白区域时显示右键菜单
+            if (event.getTarget() == canvasPane) {
+                contextMenu.show(canvasPane, event.getScreenX(), event.getScreenY());
+            }
+            event.consume();
+        });
+        
+        // 点击其他地方时隐藏右键菜单
+        canvasPane.setOnMousePressed(event -> {
+            if (contextMenu.isShowing()) {
+                contextMenu.hide();
+            }
+            // 只响应鼠标左键且不是拖拽Shape时
+            if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
+                startX = event.getX();
+                startY = event.getY();
+                selectionRect.setX(startX);
+                selectionRect.setY(startY);
+                selectionRect.setWidth(0);
+                selectionRect.setHeight(0);
+                selectionRect.setVisible(true);
+            }
+        });
+    }
+    
+    /**
+     * 全选功能的占位实现
+     */
+    private void selectAllShapes() {
+        // TODO: 实现全选功能
+        System.out.println("全选功能待实现");
+    }
+    
+    /**
+     * 粘贴功能的占位实现
+     */
+    private void pasteShapes() {
+        // TODO: 实现粘贴功能
+        System.out.println("粘贴功能待实现");
     }
 }
