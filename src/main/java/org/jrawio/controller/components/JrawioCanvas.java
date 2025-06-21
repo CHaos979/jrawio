@@ -44,46 +44,8 @@ public class JrawioCanvas {
         // 让gridCanvas不响应鼠标事件
         gridCanvas.setMouseTransparent(true);
 
-        // 允许拖拽进入
-        canvasPane.setOnDragOver(event -> {
-            Dragboard db = event.getDragboard();
-            if (db.hasString()) {
-                // 检查是否为支持的形状类型
-                try {
-                    for (org.jrawio.controller.shape.ShapeType type : org.jrawio.controller.shape.ShapeType.values()) {
-                        if (type.getIdentifier().equals(db.getString())) {
-                            event.acceptTransferModes(TransferMode.COPY);
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    // 忽略异常
-                }
-            }
-            event.consume();
-        });
-
-        // 拖拽放下时创建Shape
-        canvasPane.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasString()) {
-                try {
-                    // 使用ShapeFactory根据标识符创建Shape对象
-                    Shape shape = ShapeFactory.createShape(db.getString(), 80, 80);
-                    // 设置放置位置
-                    shape.setLayoutX(event.getX() - shape.getWidth() / 2);
-                    shape.setLayoutY(event.getY() - shape.getHeight() / 2);
-                    canvasPane.getChildren().add(shape);
-                    success = true;
-                } catch (IllegalArgumentException e) {
-                    // 不支持的形状类型，忽略
-                    System.err.println("不支持的形状类型: " + db.getString());
-                }
-            }
-            event.setDropCompleted(success);
-            event.consume();
-        });
+        // 初始化拖拽功能
+        initializeDragAndDrop();
 
         // 初始化右键菜单
         initializeContextMenu();
@@ -124,6 +86,77 @@ public class JrawioCanvas {
         dropShadow.setOffsetY(5);
         dropShadow.setColor(Color.rgb(50, 50, 50, 0.4));
         gridCanvas.setEffect(dropShadow);
+    }
+
+    /**
+     * 初始化拖拽功能
+     */
+    private void initializeDragAndDrop() {
+        setupDragOver();
+        setupDragDropped();
+    }
+
+    /**
+     * 设置拖拽悬停事件
+     */
+    private void setupDragOver() {
+        canvasPane.setOnDragOver(event -> {
+            Dragboard db = event.getDragboard();
+            if (db.hasString() && isSupportedShapeType(db.getString())) {
+                event.acceptTransferModes(TransferMode.COPY);
+            }
+            event.consume();
+        });
+    }
+
+    /**
+     * 设置拖拽放下事件
+     */
+    private void setupDragDropped() {
+        canvasPane.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                success = createShapeFromDrag(db.getString(), event.getX(), event.getY());
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    /**
+     * 检查是否为支持的形状类型
+     */
+    private boolean isSupportedShapeType(String identifier) {
+        try {
+            for (org.jrawio.controller.shape.ShapeType type : org.jrawio.controller.shape.ShapeType.values()) {
+                if (type.getIdentifier().equals(identifier)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            // 忽略异常
+        }
+        return false;
+    }
+
+    /**
+     * 从拖拽创建形状
+     */
+    private boolean createShapeFromDrag(String identifier, double x, double y) {
+        try {
+            // 使用ShapeFactory根据标识符创建Shape对象
+            Shape shape = ShapeFactory.createShape(identifier, 80, 80);
+            // 设置放置位置
+            shape.setLayoutX(x - shape.getWidth() / 2);
+            shape.setLayoutY(y - shape.getHeight() / 2);
+            canvasPane.getChildren().add(shape);
+            return true;
+        } catch (IllegalArgumentException e) {
+            // 不支持的形状类型，忽略
+            System.err.println("不支持的形状类型: " + identifier);
+            return false;
+        }
     }
 
     /**
