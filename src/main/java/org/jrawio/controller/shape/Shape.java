@@ -10,6 +10,7 @@ import javafx.scene.Cursor;
 import org.jrawio.controller.RightPanel;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Data;
 
 public abstract class Shape extends Canvas {
     private boolean selected = false; // 是否被选中
@@ -26,6 +27,7 @@ public abstract class Shape extends Canvas {
     /**
      * 内部状态机类 - 管理Shape的交互状态
      */
+    @Data
     public static class ShapeStateMachine {
         // 互斥的交互状态枚举
         public enum InteractionState {
@@ -58,34 +60,6 @@ public abstract class Shape extends Canvas {
 
         public boolean isResizing() {
             return currentState == InteractionState.RESIZING;
-        }
-
-        public ResizeHandle getActiveHandle() {
-            return activeHandle;
-        }
-
-        public double getOrgSceneX() {
-            return orgSceneX;
-        }
-
-        public double getOrgSceneY() {
-            return orgSceneY;
-        }
-
-        public double getOriginalWidth() {
-            return originalWidth;
-        }
-
-        public double getOriginalHeight() {
-            return originalHeight;
-        }
-
-        public double getOriginalX() {
-            return originalX;
-        }
-
-        public double getOriginalY() {
-            return originalY;
         }
 
         // 状态转换API
