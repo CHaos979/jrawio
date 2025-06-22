@@ -155,6 +155,13 @@ public abstract class Shape extends Canvas {
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
 
+        // 检查是否为双击事件 - 优先处理双击，避免状态冲突
+        if (event.getClickCount() == 2) {
+            startEdit();
+            event.consume();
+            return;
+        }
+
         // Hook: 让子类处理特定的控制点检测和交互
         if (selected && handleControlPointInteraction(event)) {
             event.consume();
@@ -169,8 +176,23 @@ public abstract class Shape extends Canvas {
 
         // 标准的选择处理逻辑
         boolean multiSelect = event.isShiftDown() || event.isControlDown();
-        if (multiSelect || !selected) {
-            handleClick(event);
+        
+        // 按住图形时确保选中状态
+        if (multiSelect) {
+            // 多选模式：切换选中状态
+            setSelected(!selected);
+        } else {
+            // 单选模式：如果未选中则选中，如果已选中则保持选中
+            if (!selected) {
+                // 取消其他图形的选中状态
+                for (Shape shape : selectedShapes.toArray(new Shape[0])) {
+                    if (shape != this) {
+                        shape.setSelected(false);
+                    }
+                }
+                setSelected(true);
+            }
+            // 如果已经选中，保持选中状态不变
         }
 
         // Hook: 让子类进行额外的按下后处理
@@ -362,26 +384,6 @@ public abstract class Shape extends Canvas {
         System.out.println("[handleClick]" + this.toString());
         if (stateMachine.getCurrentState() != InteractionState.IDLE) {
             stateMachine.toIdle();
-            return;
-        }
-        if (event.getClickCount() == 2) {
-            startEdit();
-            event.consume();
-            return;
-        }
-
-        boolean multiSelect = event.isShiftDown() || event.isControlDown();
-
-        if (multiSelect) {
-            // 多选：切换当前shape的选中状态，不影响其他shape
-            setSelected(!selected);
-        } else {
-            // 单选：取消其他shape的选中，只选中当前的
-            System.out.println("[handleClick] cancel select other shape");
-            for (Shape shape : selectedShapes.toArray(new Shape[0])) {
-                shape.setSelected(false);
-            }
-            setSelected(true);
         }
         event.consume();
     }
