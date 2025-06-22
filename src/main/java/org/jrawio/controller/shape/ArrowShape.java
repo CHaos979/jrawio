@@ -314,7 +314,12 @@ public class ArrowShape extends Shape {
         // 如果选中，绘制箭头控制点
         if (selected) {
             drawArrowControlPoints(gc, x, y, shapeWidth, shapeHeight);
+            // 绘制箭头线段中心点用于调试
+            drawArrowLineCenter(gc, x, y, shapeWidth, shapeHeight);
         }
+
+        // 绘制canvas中心点用于调试
+        drawCanvasCenter(gc);
 
         // 绘制文本
         if (text != null && !text.isEmpty() && textField == null) {
@@ -335,6 +340,83 @@ public class ArrowShape extends Shape {
 
             gc.fillText(text, textX, textY);
         }
+    }
+
+    /**
+     * 绘制canvas中心点用于调试
+     * 在canvas中心绘制一个红色十字标记
+     */
+    private void drawCanvasCenter(GraphicsContext gc) {
+        // 计算canvas中心点
+        double centerX = getWidth() / 2.0;
+        double centerY = getHeight() / 2.0;
+
+        // 保存当前绘制状态
+        Color originalStroke = (Color) gc.getStroke();
+        double originalLineWidth = gc.getLineWidth();
+
+        // 设置调试绘制属性
+        gc.setStroke(Color.RED);
+        gc.setLineWidth(1);
+
+        // 绘制十字标记
+        double crossSize = 6;
+        gc.strokeLine(centerX - crossSize, centerY, centerX + crossSize, centerY); // 水平线
+        gc.strokeLine(centerX, centerY - crossSize, centerX, centerY + crossSize); // 垂直线
+
+        // 绘制中心点圆圈
+        double circleRadius = 2;
+        gc.strokeOval(centerX - circleRadius, centerY - circleRadius, 
+                     circleRadius * 2, circleRadius * 2);
+
+        // 恢复原始绘制状态
+        gc.setStroke(originalStroke);
+        gc.setLineWidth(originalLineWidth);
+
+        System.out.println("[DebugCenter] Canvas size: " + getWidth() + "x" + getHeight() + 
+                          ", Center at: (" + centerX + "," + centerY + ")");
+    }
+
+    /**
+     * 绘制箭头线段中心点用于调试
+     * 在两点连线的中心绘制一个绿色十字标记
+     */
+    private void drawArrowLineCenter(GraphicsContext gc, double drawX, double drawY, double drawWidth, double drawHeight) {
+        if (startPoint == null || endPoint == null) return;
+
+        // 计算实际的起始点和结束点坐标
+        double actualStartX = drawX + (startPoint.getX() / getWidth()) * drawWidth;
+        double actualStartY = drawY + (startPoint.getY() / getHeight()) * drawHeight;
+        double actualEndX = drawX + (endPoint.getX() / getWidth()) * drawWidth;
+        double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
+
+        // 计算箭头线段的中心点
+        double lineCenterX = (actualStartX + actualEndX) / 2.0;
+        double lineCenterY = (actualStartY + actualEndY) / 2.0;
+
+        // 保存当前绘制状态
+        Color originalStroke = (Color) gc.getStroke();
+        double originalLineWidth = gc.getLineWidth();
+
+        // 设置调试绘制属性
+        gc.setStroke(Color.GREEN);
+        gc.setLineWidth(1);
+
+        // 绘制十字标记
+        double crossSize = 8;
+        gc.strokeLine(lineCenterX - crossSize, lineCenterY, lineCenterX + crossSize, lineCenterY); // 水平线
+        gc.strokeLine(lineCenterX, lineCenterY - crossSize, lineCenterX, lineCenterY + crossSize); // 垂直线
+
+        // 绘制中心点圆圈
+        double circleRadius = 3;
+        gc.strokeOval(lineCenterX - circleRadius, lineCenterY - circleRadius, 
+                     circleRadius * 2, circleRadius * 2);
+
+        // 恢复原始绘制状态
+        gc.setStroke(originalStroke);
+        gc.setLineWidth(originalLineWidth);
+
+        System.out.println("[DebugLineCenter] Arrow line center at: (" + lineCenterX + "," + lineCenterY + ")");
     }
 
     /**
@@ -412,10 +494,7 @@ public class ArrowShape extends Shape {
         double localX = event.getX();
         double localY = event.getY();
 
-        // 确保坐标在合理范围内
-        localX = Math.max(0, Math.min(localX, getWidth()));
-        localY = Math.max(0, Math.min(localY, getHeight()));
-
+        // 移除坐标范围限制，允许箭头超出当前canvas大小
         System.out.println("[ArrowControlPointDrag] New local coordinates: (" + localX + ", " + localY + ")");
 
         // 根据活动的控制点类型更新相应的点
@@ -427,6 +506,9 @@ public class ArrowShape extends Shape {
             System.out.println("[ArrowControlPointDrag] Updated endPoint: " + endPoint);
         }
 
+        // 调整canvas大小以适应新的箭头范围
+        adjustCanvasSizeToFitArrow();
+
         // 重新绘制
         draw();
 
@@ -435,6 +517,59 @@ public class ArrowShape extends Shape {
             textField.setLayoutX(getLayoutX() + 4);
             textField.setLayoutY(getLayoutY() + getHeight() / 2 - 12);
         }
+    }
+
+    /**
+     * 调整canvas大小以适应箭头的范围
+     * Canvas大小完全由起始点和终点直接确定，canvas中心是两点连线的中心
+     */
+    private void adjustCanvasSizeToFitArrow() {
+        if (startPoint == null || endPoint == null) return;
+
+        // 计算两点连线的中心点
+        double centerX = (startPoint.getX() + endPoint.getX()) / 2.0;
+        double centerY = (startPoint.getY() + endPoint.getY()) / 2.0;
+
+        // 计算箭头的边界框
+        double minX = Math.min(startPoint.getX(), endPoint.getX());
+        double minY = Math.min(startPoint.getY(), endPoint.getY());
+        double maxX = Math.max(startPoint.getX(), endPoint.getX());
+        double maxY = Math.max(startPoint.getY(), endPoint.getY());
+
+        // 添加边距以确保箭头头部和控制点有足够空间
+        double padding = 20;
+        double arrowWidth = (maxX - minX) + 2 * padding;
+        double arrowHeight = (maxY - minY) + 2 * padding;
+
+        // 确保最小尺寸
+        arrowWidth = Math.max(arrowWidth, 40);
+        arrowHeight = Math.max(arrowHeight, 40);
+
+        // 计算新的canvas位置，使canvas中心与两点连线中心对齐
+        double newLayoutX = getLayoutX() + centerX - arrowWidth / 2.0;
+        double newLayoutY = getLayoutY() + centerY - arrowHeight / 2.0;
+
+        // 计算起始点和结束点在新canvas中的坐标
+        double newStartX = startPoint.getX() - centerX + arrowWidth / 2.0;
+        double newStartY = startPoint.getY() - centerY + arrowHeight / 2.0;
+        double newEndX = endPoint.getX() - centerX + arrowWidth / 2.0;
+        double newEndY = endPoint.getY() - centerY + arrowHeight / 2.0;
+
+        // 更新位置和大小
+        setLayoutX(newLayoutX);
+        setLayoutY(newLayoutY);
+        setShapeWidth(arrowWidth);
+        setShapeHeight(arrowHeight);
+
+        // 更新起始点和结束点坐标（相对于新的canvas）
+        startPoint = new Point2D(newStartX, newStartY);
+        endPoint = new Point2D(newEndX, newEndY);
+
+        System.out.println("[AdjustCanvas] Canvas centered on arrow line center");
+        System.out.println("[AdjustCanvas] Arrow line center: (" + centerX + "," + centerY + ")");
+        System.out.println("[AdjustCanvas] New canvas size: " + arrowWidth + "x" + arrowHeight);
+        System.out.println("[AdjustCanvas] New canvas position: (" + newLayoutX + "," + newLayoutY + ")");
+        System.out.println("[AdjustCanvas] New StartPoint: " + startPoint + ", EndPoint: " + endPoint);
     }
 
     @Override
