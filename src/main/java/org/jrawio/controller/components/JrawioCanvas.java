@@ -127,34 +127,69 @@ public class JrawioCanvas {
     /**
      * 检查是否为支持的形状类型
      */
-    private boolean isSupportedShapeType(String shapeTypeName) {
+    private boolean isSupportedShapeType(String dragData) {
         try {
+            // 尝试解析新格式 "ShapeType:width,height"
+            String[] parts = dragData.split(":");
+            String shapeTypeName = parts[0];
             ShapeType.valueOf(shapeTypeName);
             return true;
         } catch (IllegalArgumentException e) {
-            return false;
+            // 如果新格式解析失败，尝试旧格式（只有ShapeType名称）
+            try {
+                ShapeType.valueOf(dragData);
+                return true;
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
         }
     }
 
     /**
      * 从拖拽创建形状
      */
-    private boolean createShapeFromDrag(String shapeTypeName, double x, double y) {
+    private boolean createShapeFromDrag(String dragData, double x, double y) {
         try {
-            // 直接通过枚举名称获取ShapeType
+            // 解析拖拽数据，格式为 "ShapeType:width,height"
+            String[] parts = dragData.split(":");
+            String shapeTypeName = parts[0];
+            
+            // 默认大小
+            double width = 80;
+            double height = 80;
+            
+            // 如果有大小信息，解析它
+            if (parts.length > 1) {
+                String[] sizeParts = parts[1].split(",");
+                if (sizeParts.length == 2) {
+                    width = Double.parseDouble(sizeParts[0]);
+                    height = Double.parseDouble(sizeParts[1]);
+                }
+            }
+            
+            // 通过枚举名称获取ShapeType
             ShapeType shapeType = ShapeType.valueOf(shapeTypeName);
             
-            // 使用ShapeFactory根据枚举类型创建Shape对象
-            Shape shape = ShapeFactory.createShape(shapeType, 80, 80);
+            // 使用ShapeFactory根据枚举类型和指定大小创建Shape对象
+            Shape shape = ShapeFactory.createShape(shapeType, width, height);
             // 设置放置位置
             shape.setLayoutX(x - shape.getWidth() / 2);
             shape.setLayoutY(y - shape.getHeight() / 2);
             canvasPane.getChildren().add(shape);
             return true;
-        } catch (IllegalArgumentException e) {
-            // 不支持的形状类型，忽略
-            System.err.println("不支持的形状类型: " + shapeTypeName);
-            return false;
+        } catch (Exception e) {
+            // 如果解析失败，尝试使用旧格式（只有ShapeType名称）
+            try {
+                ShapeType shapeType = ShapeType.valueOf(dragData);
+                Shape shape = ShapeFactory.createShape(shapeType, 80, 80);
+                shape.setLayoutX(x - shape.getWidth() / 2);
+                shape.setLayoutY(y - shape.getHeight() / 2);
+                canvasPane.getChildren().add(shape);
+                return true;
+            } catch (IllegalArgumentException ex) {
+                System.err.println("不支持的形状类型: " + dragData);
+                return false;
+            }
         }
     }
 

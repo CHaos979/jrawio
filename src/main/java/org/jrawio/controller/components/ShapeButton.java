@@ -22,6 +22,10 @@ public class ShapeButton implements Initializable {
     
     private ShapeType shapeType = ShapeType.OVAL; // 默认为椭圆
     
+    // 定义默认的形状大小
+    private static final double DEFAULT_SHAPE_WIDTH = 80;
+    private static final double DEFAULT_SHAPE_HEIGHT = 80;
+    
     /**
      * 设置要绘制的形状类型
      */
@@ -62,20 +66,22 @@ public class ShapeButton implements Initializable {
      * @return 预览图片
      */
     private WritableImage generatePreviewImage() {
-        double imageSize = 80; // 预览图片大小，与实际形状大小一致
+        double imageWidth = DEFAULT_SHAPE_WIDTH; // 预览图片宽度，与实际形状大小一致
+        double imageHeight = DEFAULT_SHAPE_HEIGHT; // 预览图片高度，与实际形状大小一致
         double padding = 1;    // 减少padding以适应更大的形状
-        double shapeSize = imageSize - 2 * padding;
+        double shapeWidth = imageWidth - 2 * padding;
+        double shapeHeight = imageHeight - 2 * padding;
         
         // 创建临时画布来生成图片
-        Canvas tempCanvas = new Canvas(imageSize, imageSize);
+        Canvas tempCanvas = new Canvas(imageWidth, imageHeight);
         GraphicsContext gc = tempCanvas.getGraphicsContext2D();
         
         // 清除背景（透明）
-        gc.clearRect(0, 0, imageSize, imageSize);
+        gc.clearRect(0, 0, imageWidth, imageHeight);
         
         // 使用对应的Shape类来绘制预览
-        Shape previewShape = ShapeFactory.createShape(shapeType, shapeSize, shapeSize);
-        previewShape.drawPreview(gc, padding, padding, shapeSize, shapeSize);
+        Shape previewShape = ShapeFactory.createShape(shapeType, shapeWidth, shapeHeight);
+        previewShape.drawPreview(gc, padding, padding, shapeWidth, shapeHeight);
         
         // 将画布内容转换为图片，使用更高的DPI来提高清晰度
         javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
@@ -93,6 +99,10 @@ public class ShapeButton implements Initializable {
             
             // 传递ShapeType枚举的名称（用于创建形状）
             content.putString(shapeType.name());
+            
+            // 传递形状的大小信息
+            String sizeInfo = DEFAULT_SHAPE_WIDTH + "," + DEFAULT_SHAPE_HEIGHT;
+            content.put(javafx.scene.input.DataFormat.PLAIN_TEXT, shapeType.name() + ":" + sizeInfo);
             
             // 生成并传递预览图片
             WritableImage previewImage = generatePreviewImage();
