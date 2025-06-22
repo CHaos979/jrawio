@@ -132,9 +132,9 @@ public abstract class LineShape extends Shape {
             }
         }
 
-        // 拖动时如果未选中，则先选中自己
+        // 拖动时如果未选中，则先选中自己（但不取消其他图形的选中状态）
         if (!selected) {
-            handleClick(event);
+            setSelected(true);
         }
         event.consume();
     }

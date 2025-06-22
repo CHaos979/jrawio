@@ -8,6 +8,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.Cursor;
 import org.jrawio.controller.components.RightPanel;
+import org.jrawio.controller.shape.Shape.ShapeStateMachine.InteractionState;
+
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
@@ -191,7 +193,6 @@ public abstract class Shape extends Canvas {
      */
     protected void handleMouseReleased(MouseEvent event) {
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING) {
-            stateMachine.toIdle();
             setCursor(Cursor.HAND);
         }
         event.consume();
@@ -258,15 +259,13 @@ public abstract class Shape extends Canvas {
      */
     protected void handleClick(MouseEvent event) {
         System.out.println("[handleClick]" + this.toString());
+        if (stateMachine.getCurrentState() != InteractionState.IDLE) {
+            stateMachine.toIdle();
+            return;
+        }
         if (event.getClickCount() == 2) {
             startEdit();
             event.consume();
-            return;
-        }
-        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING ||
-                stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
-            // 如果是拖动或缩放后产生的点击，忽略
-            stateMachine.toIdle();
             return;
         }
 
@@ -485,9 +484,9 @@ public abstract class Shape extends Canvas {
         gc.setLineDashes(originalLineDashes);
 
         // 输出调试信息到控制台
-        System.out.println("[DebugCanvas] " + this.getClass().getSimpleName() +
+        /* System.out.println("[DebugCanvas] " + this.getClass().getSimpleName() +
                 " - Canvas size: " + getWidth() + "x" + getHeight() +
                 ", Center at: (" + centerX + "," + centerY + ")" +
-                ", Position: (" + getLayoutX() + "," + getLayoutY() + ")");
+                ", Position: (" + getLayoutX() + "," + getLayoutY() + ")"); */
     }
 }

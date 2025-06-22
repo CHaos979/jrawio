@@ -156,7 +156,6 @@ public abstract class BlockShape extends Shape {
                 rightPanel.onShapeSelectionChanged(selectedShapes);
             }
         } else if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING) {
-            stateMachine.toIdle();
             setCursor(Cursor.HAND);
         }
         event.consume();
