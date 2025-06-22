@@ -108,36 +108,20 @@ public abstract class LineShape extends Shape {
     }
     
     /**
-     * 处理鼠标按下事件
-     * 
-     * @param event 鼠标事件
+     * 重写控制点交互处理，检查线形控制点
      */
     @Override
-    protected void handlePressed(MouseEvent event) {
-        System.out.println("[handlePressed]" + this.toString());
-        this.toFront();
-        stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
-
-        // 检查是否点击在线形控制点上
-        if (selected) {
-            LineControlPoint controlPoint = getLineControlPointAt(event.getX(), event.getY());
-            if (controlPoint != null) {
-                System.out.println("[LinePressed] Control point detected: " + controlPoint);
-                stateMachine.toResizing(null, event.getSceneX(), event.getSceneY(),
-                        getWidth(), getHeight(), getLayoutX(), getLayoutY());
-                // 保存当前编辑的控制点
-                activeLineControlPoint = controlPoint;
-                event.consume();
-                return;
-            }
+    protected boolean handleControlPointInteraction(MouseEvent event) {
+        LineControlPoint controlPoint = getLineControlPointAt(event.getX(), event.getY());
+        if (controlPoint != null) {
+            System.out.println("[LinePressed] Control point detected: " + controlPoint);
+            stateMachine.toResizing(null, event.getSceneX(), event.getSceneY(),
+                    getWidth(), getHeight(), getLayoutX(), getLayoutY());
+            // 保存当前编辑的控制点
+            activeLineControlPoint = controlPoint;
+            return true; // 已处理控制点交互
         }
-
-        // 如果是多选操作（Ctrl/Shift按下），或者图形未选中，调用点击处理
-        boolean multiSelect = event.isShiftDown() || event.isControlDown();
-        if (multiSelect || !selected) {
-            handleClick(event);
-        }
-        event.consume();
+        return false; // 没有控制点或没有处理
     }
     
     /**
@@ -233,10 +217,10 @@ public abstract class LineShape extends Shape {
     }
 
     /**
-     * 处理鼠标释放事件
+     * 重写特定释放处理，处理线形控制点释放
      */
     @Override
-    protected void handleMouseReleased(MouseEvent event) {
+    protected boolean handleSpecificRelease(MouseEvent event) {
         if (activeLineControlPoint != null) {
             activeLineControlPoint = null;
             
@@ -257,29 +241,22 @@ public abstract class LineShape extends Shape {
             if (rightPanel != null) {
                 rightPanel.onShapeSelectionChanged(selectedShapes);
             }
-        } else {
-            super.handleMouseReleased(event);
+            return true; // 已处理线形控制点释放
         }
-        event.consume();
+        return false; // 没有线形控制点释放，使用标准释放
     }
 
     /**
-     * 处理鼠标拖拽事件
-     * 
-     * @param event 鼠标事件
+     * 重写特定拖拽处理，优先处理线形控制点拖拽
      */
     @Override
-    protected void handleDragged(MouseEvent event) {
-        System.out.println("[LineDragged] activeLineControlPoint: " + activeLineControlPoint);
-        
+    protected boolean handleSpecificDrag(MouseEvent event) {
         if (activeLineControlPoint != null) {
-            // 处理线形控制点的拖拽
+            System.out.println("[LineDragged] activeLineControlPoint: " + activeLineControlPoint);
             handleLineControlPointDrag(event);
-        } else {
-            // 如果不是控制点拖拽，使用默认的拖拽逻辑（移动整个线形）
-            super.handleDragged(event);
+            return true; // 已处理线形控制点拖拽
         }
-        event.consume();
+        return false; // 没有线形控制点拖拽，使用标准拖拽
     }
 
     /**

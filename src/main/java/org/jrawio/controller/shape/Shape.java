@@ -139,8 +139,6 @@ public abstract class Shape extends Canvas {
 
         this.setOnMousePressed(this::handlePressed);
         this.setOnMouseDragged(this::handleDragged);
-        // 移除MouseClicked绑定，避免与handlePressed中的handleClick调用冲突
-        // this.setOnMouseClicked(this::handleClick);
         this.setOnMouseMoved(this::handleMouseMoved);
         this.setOnMouseReleased(this::handleMouseReleased);
         this.setOnMouseEntered(this::handleMouseEntered);
@@ -148,35 +146,103 @@ public abstract class Shape extends Canvas {
     }
 
     /**
-     * 处理鼠标按下事件 - 基础实现，子类可重写
+     * 处理鼠标按下事件 - 使用模板方法模式，子类通过hook方法扩展功能
      * 
      * @param event 鼠标事件
      */
-    protected void handlePressed(MouseEvent event) {
+    protected final void handlePressed(MouseEvent event) {
         System.out.println("[Shape.handlePressed]" + this.toString());
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
 
-        // 如果是多选操作（Ctrl/Shift按下），或者图形未选中，调用点击处理
+        // Hook: 让子类处理特定的控制点检测和交互
+        if (selected && handleControlPointInteraction(event)) {
+            event.consume();
+            return;
+        }
+
+        // Hook: 让子类决定是否需要额外的按下处理
+        if (onBeforeSelectionHandling(event)) {
+            event.consume();
+            return;
+        }
+
+        // 标准的选择处理逻辑
         boolean multiSelect = event.isShiftDown() || event.isControlDown();
         if (multiSelect || !selected) {
             handleClick(event);
         }
+
+        // Hook: 让子类进行额外的按下后处理
+        onAfterSelectionHandling(event);
+        
         event.consume();
     }
 
     /**
-     * 处理鼠标拖拽事件 - 基础实现，子类可重写
+     * Hook方法：处理控制点交互
+     * 子类可以重写此方法来处理特定的控制点（如缩放控制点、线形控制点等）
+     * 
+     * @param event 鼠标事件
+     * @return true如果处理了控制点交互，false如果没有控制点或没有处理
+     */
+    protected boolean handleControlPointInteraction(MouseEvent event) {
+        // 默认实现：不处理任何控制点
+        return false;
+    }
+
+    /**
+     * Hook方法：选择处理前的额外逻辑
+     * 子类可以重写此方法来在标准选择逻辑前执行额外操作
+     * 
+     * @param event 鼠标事件
+     * @return true如果已经完全处理了事件，不需要继续执行标准选择逻辑；false继续执行
+     */
+    protected boolean onBeforeSelectionHandling(MouseEvent event) {
+        // 默认实现：不做任何处理，继续标准流程
+        return false;
+    }
+
+    /**
+     * Hook方法：选择处理后的额外逻辑
+     * 子类可以重写此方法来在标准选择逻辑后执行额外操作
      * 
      * @param event 鼠标事件
      */
-    protected void handleDragged(MouseEvent event) {
-        // 如果当前不是拖动状态，先切换到拖动状态
+    protected void onAfterSelectionHandling(MouseEvent event) {
+        // 默认实现：不做任何处理
+    }
+
+    /**
+     * 处理鼠标拖拽事件 - 使用模板方法模式，子类通过hook方法扩展功能
+     * 
+     * @param event 鼠标事件
+     */
+    protected final void handleDragged(MouseEvent event) {
+        // Hook: 让子类处理特定的拖拽逻辑（如控制点拖拽）
+        if (handleSpecificDrag(event)) {
+            event.consume();
+            return;
+        }
+
+        // 标准的拖拽逻辑：移动整个图形
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.IDLE) {
             stateMachine.toDragging(stateMachine.getOrgSceneX(), stateMachine.getOrgSceneY());
         }
         handleMove(event);
         event.consume();
+    }
+
+    /**
+     * Hook方法：处理特定的拖拽逻辑
+     * 子类可以重写此方法来处理特定的拖拽行为（如控制点拖拽、缩放等）
+     * 
+     * @param event 鼠标事件
+     * @return true如果已经处理了拖拽，不需要执行标准拖拽逻辑；false继续执行标准拖拽
+     */
+    protected boolean handleSpecificDrag(MouseEvent event) {
+        // 默认实现：不处理特定拖拽，使用标准拖拽
+        return false;
     }
 
     /**
@@ -189,15 +255,48 @@ public abstract class Shape extends Canvas {
     }
 
     /**
-     * 处理鼠标释放事件 - 基础实现，子类可重写
+     * 处理鼠标释放事件 - 使用模板方法模式，子类通过hook方法扩展功能
      * 
      * @param event 鼠标事件
      */
-    protected void handleMouseReleased(MouseEvent event) {
+    protected final void handleMouseReleased(MouseEvent event) {
+        // Hook: 让子类处理特定的释放逻辑
+        if (handleSpecificRelease(event)) {
+            event.consume();
+            return;
+        }
+
+        // 标准的释放逻辑
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING) {
             setCursor(Cursor.HAND);
         }
+
+        // Hook: 让子类进行额外的释放后处理
+        onAfterRelease(event);
+        
         event.consume();
+    }
+
+    /**
+     * Hook方法：处理特定的鼠标释放逻辑
+     * 子类可以重写此方法来处理特定的释放行为（如控制点释放、缩放结束等）
+     * 
+     * @param event 鼠标事件
+     * @return true如果已经处理了释放，不需要执行标准释放逻辑；false继续执行标准释放
+     */
+    protected boolean handleSpecificRelease(MouseEvent event) {
+        // 默认实现：不处理特定释放，使用标准释放
+        return false;
+    }
+
+    /**
+     * Hook方法：释放处理后的额外逻辑
+     * 子类可以重写此方法来在标准释放逻辑后执行额外操作
+     * 
+     * @param event 鼠标事件
+     */
+    protected void onAfterRelease(MouseEvent event) {
+        // 默认实现：不做任何处理
     }
 
     /**

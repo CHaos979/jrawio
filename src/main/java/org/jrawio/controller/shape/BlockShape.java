@@ -21,53 +21,30 @@ public abstract class BlockShape extends Shape {
     }
 
     /**
-     * 处理鼠标按下事件 - 专门处理拖动和缩放的开始
-     * 
-     * @param event 鼠标事件
+     * 重写控制点交互处理，检查缩放控制点
      */
     @Override
-    protected void handlePressed(MouseEvent event) {
-        System.out.println("[BlockShape.handlePressed]" + this.toString());
-        this.toFront();
-        stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
-
-        // 检查是否点击在控制点上
-        if (selected) {
-            ResizeHandleManager.ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
-            if (handle != null) {
-                stateMachine.toResizing(handle, event.getSceneX(), event.getSceneY(),
-                        getWidth(), getHeight(), getLayoutX(), getLayoutY());
-                event.consume();
-                return;
-            }
+    protected boolean handleControlPointInteraction(MouseEvent event) {
+        ResizeHandleManager.ResizeHandle handle = getResizeHandleAt(event.getX(), event.getY());
+        if (handle != null) {
+            stateMachine.toResizing(handle, event.getSceneX(), event.getSceneY(),
+                    getWidth(), getHeight(), getLayoutX(), getLayoutY());
+            return true; // 已处理控制点交互
         }
-
-        // 如果是多选操作（Ctrl/Shift按下），或者图形未选中，调用点击处理
-        boolean multiSelect = event.isShiftDown() || event.isControlDown();
-        if (multiSelect || !selected) {
-            handleClick(event);
-        }
-        event.consume();
+        return false; // 没有控制点或没有处理
     }
 
     /**
-     * 处理鼠标拖拽事件 - 专门处理拖动和缩放逻辑
-     * 
-     * @param event 鼠标事件
+     * 重写特定拖拽处理，优先处理缩放拖拽
      */
     @Override
-    protected void handleDragged(MouseEvent event) {
+    protected boolean handleSpecificDrag(MouseEvent event) {
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING
                 && stateMachine.getActiveHandle() != null) {
             handleResize(event);
-        } else {
-            // 如果当前不是拖动状态，先切换到拖动状态
-            if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.IDLE) {
-                stateMachine.toDragging(stateMachine.getOrgSceneX(), stateMachine.getOrgSceneY());
-            }
-            handleMove(event);
+            return true; // 已处理缩放拖拽
         }
-        event.consume();
+        return false; // 没有特定拖拽，使用标准拖拽
     }
 
     /**
@@ -143,12 +120,10 @@ public abstract class BlockShape extends Shape {
     }
 
     /**
-     * 处理鼠标释放事件 - 完成拖动或缩放操作
-     * 
-     * @param event 鼠标事件
+     * 重写特定释放处理，处理缩放结束
      */
     @Override
-    protected void handleMouseReleased(MouseEvent event) {
+    protected boolean handleSpecificRelease(MouseEvent event) {
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
             resetResizeState();
             // 通知右侧面板更新尺寸信息
@@ -156,9 +131,8 @@ public abstract class BlockShape extends Shape {
             if (rightPanel != null) {
                 rightPanel.onShapeSelectionChanged(selectedShapes);
             }
-        } else if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING) {
-            setCursor(Cursor.HAND);
+            return true; // 已处理缩放释放
         }
-        event.consume();
+        return false; // 没有特定释放，使用标准释放
     }
 }
