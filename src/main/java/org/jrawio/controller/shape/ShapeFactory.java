@@ -21,6 +21,8 @@ public class ShapeFactory {
                 return new OvalShape(width, height);
             case RECTANGLE:
                 return new RectangleShape(width, height);
+            case ARROW:
+                return new ArrowShape(width, height);
             default:
                 throw new IllegalArgumentException("不支持的形状类型: " + shapeType);
         }

@@ -18,7 +18,7 @@ public class LeftPanel {
         shapeBarControllers.add(new ShapeBar.Builder()
                 .setTitle("基本图形")
                 .setExpanded(true)
-                .addShapeTypes(ShapeType.OVAL, ShapeType.RECTANGLE)
+                .addShapeTypes(ShapeType.OVAL, ShapeType.RECTANGLE, ShapeType.ARROW)
                 .build());
         shapeBarControllers.add(new ShapeBar.Builder()
                 .setTitle("流程图")
