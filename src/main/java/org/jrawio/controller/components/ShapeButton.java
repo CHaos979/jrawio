@@ -97,12 +97,14 @@ public class ShapeButton implements Initializable {
             Dragboard db = shapeCanvas.startDragAndDrop(TransferMode.COPY);
             ClipboardContent content = new ClipboardContent();
             
-            // 传递ShapeType枚举的名称（用于创建形状）
-            content.putString(shapeType.name());
+            // 创建ShapeCreator函数式对象（使用独立的可序列化类）
+            ShapeCreator shapeCreator = new SimpleShapeCreator(shapeType);
             
-            // 传递形状的大小信息
-            String sizeInfo = DEFAULT_SHAPE_WIDTH + "," + DEFAULT_SHAPE_HEIGHT;
-            content.put(javafx.scene.input.DataFormat.PLAIN_TEXT, shapeType.name() + ":" + sizeInfo);
+            // 传递函数式对象（通过序列化）
+            content.put(DragDataFormats.SHAPE_CREATOR_FORMAT, shapeCreator);
+            
+            // 同时保留字符串格式作为后备方案（兼容性）
+            content.putString(shapeType.name() + ":" + DEFAULT_SHAPE_WIDTH + "," + DEFAULT_SHAPE_HEIGHT);
             
             // 生成并传递预览图片
             WritableImage previewImage = generatePreviewImage();

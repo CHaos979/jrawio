@@ -102,7 +102,9 @@ public class JrawioCanvas {
     private void setupDragOver() {
         canvasPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
-            if (db.hasString() && isSupportedShapeType(db.getString())) {
+            // 优先检查是否有ShapeCreator函数式对象
+            if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT) || 
+                (db.hasString() && isSupportedShapeType(db.getString()))) {
                 event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
@@ -116,9 +118,15 @@ public class JrawioCanvas {
         canvasPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-            if (db.hasString()) {
+            
+            // 优先尝试使用ShapeCreator函数式对象
+            if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT)) {
+                success = createShapeFromCreator(db, event.getX(), event.getY());
+            } else if (db.hasString()) {
+                // 后备方案：使用字符串数据
                 success = createShapeFromDrag(db.getString(), event.getX(), event.getY());
             }
+            
             event.setDropCompleted(success);
             event.consume();
         });
@@ -190,6 +198,35 @@ public class JrawioCanvas {
                 System.err.println("不支持的形状类型: " + dragData);
                 return false;
             }
+        }
+    }
+
+    /**
+     * 使用ShapeCreator函数式对象创建形状
+     */
+    private boolean createShapeFromCreator(Dragboard db, double x, double y) {
+        try {
+            // 获取ShapeCreator函数式对象
+            ShapeCreator shapeCreator = (ShapeCreator) db.getContent(DragDataFormats.SHAPE_CREATOR_FORMAT);
+            if (shapeCreator == null) {
+                return false;
+            }
+            
+            // 使用默认大小创建形状
+            double width = 80;
+            double height = 80;
+            
+            // 调用函数式对象创建形状
+            Shape shape = shapeCreator.createShape(width, height);
+            
+            // 设置放置位置
+            shape.setLayoutX(x - shape.getWidth() / 2);
+            shape.setLayoutY(y - shape.getHeight() / 2);
+            canvasPane.getChildren().add(shape);
+            return true;
+        } catch (Exception e) {
+            System.err.println("使用ShapeCreator创建形状失败: " + e.getMessage());
+            return false;
         }
     }
 
