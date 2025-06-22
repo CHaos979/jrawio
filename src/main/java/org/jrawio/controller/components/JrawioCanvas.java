@@ -10,8 +10,6 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
-import org.jrawio.controller.shape.ShapeFactory;
-import org.jrawio.controller.shape.ShapeType;
 import java.util.Arrays;
 import java.util.List;
 
@@ -102,9 +100,8 @@ public class JrawioCanvas {
     private void setupDragOver() {
         canvasPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
-            // 优先检查是否有ShapeCreator函数式对象
-            if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT) || 
-                (db.hasString() && isSupportedShapeType(db.getString()))) {
+            // 检查是否有ShapeCreator函数式对象
+            if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT)) {
                 event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
@@ -119,86 +116,14 @@ public class JrawioCanvas {
             Dragboard db = event.getDragboard();
             boolean success = false;
             
-            // 优先尝试使用ShapeCreator函数式对象
+            // 使用ShapeCreator函数式对象创建形状
             if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT)) {
                 success = createShapeFromCreator(db, event.getX(), event.getY());
-            } else if (db.hasString()) {
-                // 后备方案：使用字符串数据
-                success = createShapeFromDrag(db.getString(), event.getX(), event.getY());
             }
             
             event.setDropCompleted(success);
             event.consume();
         });
-    }
-
-    /**
-     * 检查是否为支持的形状类型
-     */
-    private boolean isSupportedShapeType(String dragData) {
-        try {
-            // 尝试解析新格式 "ShapeType:width,height"
-            String[] parts = dragData.split(":");
-            String shapeTypeName = parts[0];
-            ShapeType.valueOf(shapeTypeName);
-            return true;
-        } catch (IllegalArgumentException e) {
-            // 如果新格式解析失败，尝试旧格式（只有ShapeType名称）
-            try {
-                ShapeType.valueOf(dragData);
-                return true;
-            } catch (IllegalArgumentException ex) {
-                return false;
-            }
-        }
-    }
-
-    /**
-     * 从拖拽创建形状
-     */
-    private boolean createShapeFromDrag(String dragData, double x, double y) {
-        try {
-            // 解析拖拽数据，格式为 "ShapeType:width,height"
-            String[] parts = dragData.split(":");
-            String shapeTypeName = parts[0];
-            
-            // 默认大小
-            double width = 80;
-            double height = 80;
-            
-            // 如果有大小信息，解析它
-            if (parts.length > 1) {
-                String[] sizeParts = parts[1].split(",");
-                if (sizeParts.length == 2) {
-                    width = Double.parseDouble(sizeParts[0]);
-                    height = Double.parseDouble(sizeParts[1]);
-                }
-            }
-            
-            // 通过枚举名称获取ShapeType
-            ShapeType shapeType = ShapeType.valueOf(shapeTypeName);
-            
-            // 使用ShapeFactory根据枚举类型和指定大小创建Shape对象
-            Shape shape = ShapeFactory.createShape(shapeType, width, height);
-            // 设置放置位置
-            shape.setLayoutX(x - shape.getWidth() / 2);
-            shape.setLayoutY(y - shape.getHeight() / 2);
-            canvasPane.getChildren().add(shape);
-            return true;
-        } catch (Exception e) {
-            // 如果解析失败，尝试使用旧格式（只有ShapeType名称）
-            try {
-                ShapeType shapeType = ShapeType.valueOf(dragData);
-                Shape shape = ShapeFactory.createShape(shapeType, 80, 80);
-                shape.setLayoutX(x - shape.getWidth() / 2);
-                shape.setLayoutY(y - shape.getHeight() / 2);
-                canvasPane.getChildren().add(shape);
-                return true;
-            } catch (IllegalArgumentException ex) {
-                System.err.println("不支持的形状类型: " + dragData);
-                return false;
-            }
-        }
     }
 
     /**
@@ -212,12 +137,8 @@ public class JrawioCanvas {
                 return false;
             }
             
-            // 使用默认大小创建形状
-            double width = 80;
-            double height = 80;
-            
-            // 调用函数式对象创建形状
-            Shape shape = shapeCreator.createShape(width, height);
+            // 调用函数式对象创建形状（大小由ShapeCreator内部决定）
+            Shape shape = shapeCreator.createShape(); // 参数会被忽略
             
             // 设置放置位置
             shape.setLayoutX(x - shape.getWidth() / 2);

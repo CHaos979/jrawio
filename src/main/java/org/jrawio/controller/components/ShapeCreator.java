@@ -16,5 +16,5 @@ public interface ShapeCreator extends Serializable {
      * @param height 形状高度
      * @return 创建的形状对象
      */
-    Shape createShape(double width, double height);
+    Shape createShape();
 }
