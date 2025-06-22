@@ -141,12 +141,14 @@ public abstract class Shape extends Canvas {
         this.setOnMouseDragged(this::handleDragged);
         this.setOnMouseMoved(this::handleMouseMoved);
         this.setOnMouseReleased(this::handleMouseReleased);
+        this.setOnMouseClicked(this::handleClick);
         this.setOnMouseEntered(this::handleMouseEntered);
         this.setOnMouseExited(this::handleMouseExited);
     }
 
     /**
      * 处理鼠标按下事件 - 使用模板方法模式，子类通过hook方法扩展功能
+     * 专注于选中逻辑处理
      * 
      * @param event 鼠标事件
      */
@@ -154,13 +156,6 @@ public abstract class Shape extends Canvas {
         System.out.println("[Shape.handlePressed]" + this.toString());
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
-
-        // 检查是否为双击事件 - 优先处理双击，避免状态冲突
-        if (event.getClickCount() == 2) {
-            startEdit();
-            event.consume();
-            return;
-        }
 
         // Hook: 让子类处理特定的控制点检测和交互
         if (selected && handleControlPointInteraction(event)) {
@@ -377,14 +372,25 @@ public abstract class Shape extends Canvas {
 
     /**
      * 处理鼠标点击事件
+     * 专注于双击编辑逻辑处理
      * 
      * @param event 鼠标事件
      */
     protected void handleClick(MouseEvent event) {
         System.out.println("[handleClick]" + this.toString());
+        
+        // 重置状态机到空闲状态
         if (stateMachine.getCurrentState() != InteractionState.IDLE) {
             stateMachine.toIdle();
         }
+        
+        // 处理双击编辑
+        if (event.getClickCount() == 2) {
+            startEdit();
+            event.consume();
+            return;
+        }
+        
         event.consume();
     }
 
