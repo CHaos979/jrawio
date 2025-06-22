@@ -3,6 +3,9 @@ package org.jrawio.controller.shape;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.geometry.Point2D;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.Cursor;
+import org.jrawio.controller.components.RightPanel;
 
 /**
  * 箭头形状类
@@ -21,6 +24,18 @@ public class ArrowShape extends Shape {
     
     /** 箭头头部的角度（弧度） */
     private static final double ARROW_HEAD_ANGLE = Math.PI / 6; // 30度
+    
+    /** 控制点半径 */
+    private static final double CONTROL_POINT_RADIUS = 4.0;
+    
+    /** 箭头控制点类型 */
+    public enum ArrowControlPoint {
+        START_POINT, // 起始点控制点
+        END_POINT    // 结束点控制点
+    }
+    
+    /** 当前活动的箭头控制点 */
+    private ArrowControlPoint activeArrowControlPoint = null;
     
     /**
      * 构造函数
@@ -97,6 +112,38 @@ public class ArrowShape extends Shape {
     }
     
     /**
+     * 处理鼠标按下事件
+     * 
+     * @param event 鼠标事件
+     */
+    @Override
+    protected void handlePressed(MouseEvent event) {
+        System.out.println("[handlePressed]" + this.toString());
+        this.toFront();
+        stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
+
+        // 检查是否点击在箭头控制点上
+        if (selected) {
+            ArrowControlPoint controlPoint = getArrowControlPointAt(event.getX(), event.getY());
+            if (controlPoint != null) {
+                System.out.println("[ArrowPressed] Control point detected: " + controlPoint);
+                stateMachine.toResizing(null, event.getSceneX(), event.getSceneY(),
+                        getWidth(), getHeight(), getLayoutX(), getLayoutY());
+                // 保存当前编辑的控制点
+                activeArrowControlPoint = controlPoint;
+                event.consume();
+                return;
+            }
+        }
+
+        // 拖动时如果未选中，则先选中自己
+        if (!selected) {
+            handleClick(event);
+        }
+        event.consume();
+    }
+    
+    /**
      * 绘制箭头头部
      * 
      * @param gc      图形上下文
@@ -124,6 +171,75 @@ public class ArrowShape extends Shape {
         double[] xPoints = {endX, arrowX1, arrowX2};
         double[] yPoints = {endY, arrowY1, arrowY2};
         gc.fillPolygon(xPoints, yPoints, 3);
+    }
+
+    /**
+     * 检测鼠标位置是否在某个箭头控制点上
+     * 
+     * @param x 鼠标X坐标
+     * @param y 鼠标Y坐标
+     * @return 控制点类型，如果不在控制点上则返回null
+     */
+    private ArrowControlPoint getArrowControlPointAt(double x, double y) {
+        if (!selected) return null;
+
+        double padding = 4;
+        double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
+        double drawX = drawingArea[0];
+        double drawY = drawingArea[1];
+        double drawWidth = drawingArea[2];
+        double drawHeight = drawingArea[3];
+
+        // 计算实际的起始点和结束点坐标
+        double actualStartX = drawX + (startPoint.getX() / getWidth()) * drawWidth;
+        double actualStartY = drawY + (startPoint.getY() / getHeight()) * drawHeight;
+        double actualEndX = drawX + (endPoint.getX() / getWidth()) * drawWidth;
+        double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
+
+        // 检查起始点控制点
+        double distToStart = Math.sqrt(Math.pow(x - actualStartX, 2) + Math.pow(y - actualStartY, 2));
+        if (distToStart <= CONTROL_POINT_RADIUS + 2) {
+            return ArrowControlPoint.START_POINT;
+        }
+
+        // 检查结束点控制点
+        double distToEnd = Math.sqrt(Math.pow(x - actualEndX, 2) + Math.pow(y - actualEndY, 2));
+        if (distToEnd <= CONTROL_POINT_RADIUS + 2) {
+            return ArrowControlPoint.END_POINT;
+        }
+
+        return null;
+    }
+
+    /**
+     * 绘制箭头控制点
+     */
+    private void drawArrowControlPoints(GraphicsContext gc, double drawX, double drawY, double drawWidth, double drawHeight) {
+        // 只有在被选中时才绘制控制点
+        if (!selected) return;
+        
+        // 计算实际的起始点和结束点坐标
+        double actualStartX = drawX + (startPoint.getX() / getWidth()) * drawWidth;
+        double actualStartY = drawY + (startPoint.getY() / getHeight()) * drawHeight;
+        double actualEndX = drawX + (endPoint.getX() / getWidth()) * drawWidth;
+        double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
+
+        // 设置控制点样式
+        gc.setFill(Color.BLUE);
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(1);
+
+        // 绘制起始点控制点
+        gc.fillOval(actualStartX - CONTROL_POINT_RADIUS, actualStartY - CONTROL_POINT_RADIUS, 
+                   CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        gc.strokeOval(actualStartX - CONTROL_POINT_RADIUS, actualStartY - CONTROL_POINT_RADIUS, 
+                     CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+
+        // 绘制结束点控制点
+        gc.fillOval(actualEndX - CONTROL_POINT_RADIUS, actualEndY - CONTROL_POINT_RADIUS, 
+                   CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        gc.strokeOval(actualEndX - CONTROL_POINT_RADIUS, actualEndY - CONTROL_POINT_RADIUS, 
+                     CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
     }
     
     /**
@@ -176,6 +292,151 @@ public class ArrowShape extends Shape {
         draw();
     }
     
+    /**
+     * 绘制图形到画布
+     */
+    @Override
+    protected void draw() {
+        GraphicsContext gc = getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+
+        // 使用工具类计算绘制区域
+        double padding = 4;
+        double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
+        double x = drawingArea[0];
+        double y = drawingArea[1];
+        double shapeWidth = drawingArea[2];
+        double shapeHeight = drawingArea[3];
+
+        // 调用子类实现的图形绘制方法
+        drawShape(gc, x, y, shapeWidth, shapeHeight);
+
+        // 如果选中，绘制箭头控制点
+        if (selected) {
+            drawArrowControlPoints(gc, x, y, shapeWidth, shapeHeight);
+        }
+
+        // 绘制文本
+        if (text != null && !text.isEmpty() && textField == null) {
+            gc.setFill(Color.BLACK);
+            javafx.scene.text.Font font = javafx.scene.text.Font.font(14);
+            gc.setFont(font);
+
+            // 用Text类测量文本宽度
+            javafx.scene.text.Text tempText = new javafx.scene.text.Text(text);
+            tempText.setFont(font);
+            double textWidth = tempText.getLayoutBounds().getWidth();
+
+            // 使用工具类计算文本居中位置
+            double[] textPosition = ShapeGeometryUtils.calculateCenteredTextPosition(
+                    getWidth(), getHeight(), textWidth, 14);
+            double textX = textPosition[0];
+            double textY = textPosition[1];
+
+            gc.fillText(text, textX, textY);
+        }
+    }
+
+    /**
+     * 处理鼠标移动事件 - 更新光标
+     */
+    @Override
+    protected void handleMouseMoved(MouseEvent event) {
+        if (!selected) {
+            setCursor(Cursor.HAND);
+            return;
+        }
+
+        ArrowControlPoint controlPoint = getArrowControlPointAt(event.getX(), event.getY());
+        if (controlPoint != null) {
+            setCursor(Cursor.HAND);
+        } else {
+            setCursor(Cursor.HAND);
+        }
+    }
+
+    /**
+     * 重写getResizeHandleAt方法，让它返回null，因为箭头不使用标准的缩放控制点
+     */
+    @Override
+    protected ResizeHandleManager.ResizeHandle getResizeHandleAt(double x, double y) {
+        // 箭头形状不使用标准的缩放控制点
+        return null;
+    }
+
+    /**
+     * 处理鼠标释放事件
+     */
+    @Override
+    protected void handleMouseReleased(MouseEvent event) {
+        if (activeArrowControlPoint != null) {
+            activeArrowControlPoint = null;
+            setCursor(Cursor.DEFAULT);
+            // 通知右侧面板更新
+            RightPanel rightPanel = RightPanel.getInstance();
+            if (rightPanel != null) {
+                rightPanel.onShapeSelectionChanged(selectedShapes);
+            }
+        } else {
+            super.handleMouseReleased(event);
+        }
+        event.consume();
+    }
+
+    /**
+     * 处理鼠标拖拽事件
+     * 
+     * @param event 鼠标事件
+     */
+    @Override
+    protected void handleDragged(MouseEvent event) {
+        System.out.println("[ArrowDragged] activeArrowControlPoint: " + activeArrowControlPoint);
+        
+        if (activeArrowControlPoint != null) {
+            // 处理箭头控制点的拖拽
+            handleArrowControlPointDrag(event);
+        } else {
+            // 如果不是控制点拖拽，使用默认的拖拽逻辑（移动整个箭头）
+            super.handleDragged(event);
+        }
+        event.consume();
+    }
+
+    /**
+     * 处理箭头控制点的拖拽
+     */
+    private void handleArrowControlPointDrag(MouseEvent event) {
+        System.out.println("[ArrowControlPointDrag] Moving " + activeArrowControlPoint);
+        
+        // 将鼠标位置转换为相对于箭头形状的本地坐标
+        double localX = event.getX();
+        double localY = event.getY();
+
+        // 确保坐标在合理范围内
+        localX = Math.max(0, Math.min(localX, getWidth()));
+        localY = Math.max(0, Math.min(localY, getHeight()));
+
+        System.out.println("[ArrowControlPointDrag] New local coordinates: (" + localX + ", " + localY + ")");
+
+        // 根据活动的控制点类型更新相应的点
+        if (activeArrowControlPoint == ArrowControlPoint.START_POINT) {
+            startPoint = new Point2D(localX, localY);
+            System.out.println("[ArrowControlPointDrag] Updated startPoint: " + startPoint);
+        } else if (activeArrowControlPoint == ArrowControlPoint.END_POINT) {
+            endPoint = new Point2D(localX, localY);
+            System.out.println("[ArrowControlPointDrag] Updated endPoint: " + endPoint);
+        }
+
+        // 重新绘制
+        draw();
+
+        // 更新文本框位置
+        if (textField != null) {
+            textField.setLayoutX(getLayoutX() + 4);
+            textField.setLayoutY(getLayoutY() + getHeight() / 2 - 12);
+        }
+    }
+
     @Override
     public String toString() {
         return "ArrowShape{" +
