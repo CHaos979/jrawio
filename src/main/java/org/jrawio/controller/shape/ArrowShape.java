@@ -26,7 +26,7 @@ public class ArrowShape extends Shape {
     private static final double ARROW_HEAD_ANGLE = Math.PI / 6; // 30度
     
     /** 控制点半径 */
-    private static final double CONTROL_POINT_RADIUS = 4.0;
+    private static final double CONTROL_POINT_SIZE = 6.0;
     
     /** 箭头控制点类型 */
     public enum ArrowControlPoint {
@@ -198,13 +198,13 @@ public class ArrowShape extends Shape {
 
         // 检查起始点控制点
         double distToStart = Math.sqrt(Math.pow(x - actualStartX, 2) + Math.pow(y - actualStartY, 2));
-        if (distToStart <= CONTROL_POINT_RADIUS + 2) {
+        if (distToStart <= CONTROL_POINT_SIZE / 2 + 2) {
             return ArrowControlPoint.START_POINT;
         }
 
         // 检查结束点控制点
         double distToEnd = Math.sqrt(Math.pow(x - actualEndX, 2) + Math.pow(y - actualEndY, 2));
-        if (distToEnd <= CONTROL_POINT_RADIUS + 2) {
+        if (distToEnd <= CONTROL_POINT_SIZE / 2 + 2) {
             return ArrowControlPoint.END_POINT;
         }
 
@@ -224,22 +224,22 @@ public class ArrowShape extends Shape {
         double actualEndX = drawX + (endPoint.getX() / getWidth()) * drawWidth;
         double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
 
-        // 设置控制点样式
-        gc.setFill(Color.BLUE);
-        gc.setStroke(Color.WHITE);
-        gc.setLineWidth(1);
+        // 设置控制点样式 - 与其他图形保持一致
+        gc.setFill(Color.WHITE);  // 白色填充
+        gc.setStroke(Color.BLUE); // 蓝色边框
+        gc.setLineWidth(1);       // 边框宽度为1
 
-        // 绘制起始点控制点
-        gc.fillOval(actualStartX - CONTROL_POINT_RADIUS, actualStartY - CONTROL_POINT_RADIUS, 
-                   CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
-        gc.strokeOval(actualStartX - CONTROL_POINT_RADIUS, actualStartY - CONTROL_POINT_RADIUS, 
-                     CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        // 绘制起始点控制点 - 使用矩形而不是圆形，与其他图形一致
+        gc.fillRect(actualStartX - CONTROL_POINT_SIZE / 2, actualStartY - CONTROL_POINT_SIZE / 2, 
+                   CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
+        gc.strokeRect(actualStartX - CONTROL_POINT_SIZE / 2, actualStartY - CONTROL_POINT_SIZE / 2, 
+                     CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
 
-        // 绘制结束点控制点
-        gc.fillOval(actualEndX - CONTROL_POINT_RADIUS, actualEndY - CONTROL_POINT_RADIUS, 
-                   CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
-        gc.strokeOval(actualEndX - CONTROL_POINT_RADIUS, actualEndY - CONTROL_POINT_RADIUS, 
-                     CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        // 绘制结束点控制点 - 使用矩形而不是圆形，与其他图形一致
+        gc.fillRect(actualEndX - CONTROL_POINT_SIZE / 2, actualEndY - CONTROL_POINT_SIZE / 2, 
+                   CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
+        gc.strokeRect(actualEndX - CONTROL_POINT_SIZE / 2, actualEndY - CONTROL_POINT_SIZE / 2, 
+                     CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
     }
     
     /**
