@@ -70,26 +70,6 @@ public abstract class BlockShape extends Shape {
     }
 
     /**
-     * 处理移动操作
-     */
-    protected void handleMove(MouseEvent event) {
-        double offsetX = event.getSceneX() - stateMachine.getOrgSceneX();
-        double offsetY = event.getSceneY() - stateMachine.getOrgSceneY();
-        // 同步移动所有被选中的Shape
-        for (Shape shape : selectedShapes) {
-            shape.setLayoutX(shape.getLayoutX() + offsetX);
-            shape.setLayoutY(shape.getLayoutY() + offsetY);
-
-            // 同步移动文本框
-            if (shape.textField != null) {
-                shape.textField.setLayoutX(shape.getLayoutX() + 4);
-                shape.textField.setLayoutY(shape.getLayoutY() + shape.getHeight() / 2 - 12);
-            }
-        }
-        stateMachine.updateOrgScene(event.getSceneX(), event.getSceneY());
-    }
-
-    /**
      * 处理缩放操作
      */
     protected void handleResize(MouseEvent event) {

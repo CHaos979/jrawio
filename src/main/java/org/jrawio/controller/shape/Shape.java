@@ -150,7 +150,15 @@ public abstract class Shape extends Canvas {
      * @param event 鼠标事件
      */
     protected void handlePressed(MouseEvent event) {
-        // 基础实现：什么都不做
+        System.out.println("[Shape.handlePressed]" + this.toString());
+        this.toFront();
+        stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
+
+        // 拖动时如果未选中，则先选中自己
+        if (!selected) {
+            handleClick(event);
+        }
+        event.consume();
     }
 
     /**
@@ -159,7 +167,12 @@ public abstract class Shape extends Canvas {
      * @param event 鼠标事件
      */
     protected void handleDragged(MouseEvent event) {
-        // 基础实现：什么都不做
+        // 如果当前不是拖动状态，先切换到拖动状态
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.IDLE) {
+            stateMachine.toDragging(stateMachine.getOrgSceneX(), stateMachine.getOrgSceneY());
+        }
+        handleMove(event);
+        event.consume();
     }
 
     /**
@@ -177,7 +190,31 @@ public abstract class Shape extends Canvas {
      * @param event 鼠标事件
      */
     protected void handleMouseReleased(MouseEvent event) {
-        // 基础实现：什么都不做
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING) {
+            stateMachine.toIdle();
+            setCursor(Cursor.HAND);
+        }
+        event.consume();
+    }
+
+    /**
+     * 处理移动操作 - 共通的拖动移动逻辑
+     */
+    protected void handleMove(MouseEvent event) {
+        double offsetX = event.getSceneX() - stateMachine.getOrgSceneX();
+        double offsetY = event.getSceneY() - stateMachine.getOrgSceneY();
+        // 同步移动所有被选中的Shape
+        for (Shape shape : selectedShapes) {
+            shape.setLayoutX(shape.getLayoutX() + offsetX);
+            shape.setLayoutY(shape.getLayoutY() + offsetY);
+
+            // 同步移动文本框
+            if (shape.textField != null) {
+                shape.textField.setLayoutX(shape.getLayoutX() + 4);
+                shape.textField.setLayoutY(shape.getLayoutY() + shape.getHeight() / 2 - 12);
+            }
+        }
+        stateMachine.updateOrgScene(event.getSceneX(), event.getSceneY());
     }
 
     /**
@@ -404,12 +441,6 @@ public abstract class Shape extends Canvas {
     }
 
     /**
-     * 处理鼠标移动事件
-     * 
-     * @param event 鼠标事件
-     */
-
-    /**
      * 绘制调试信息
      * 包括canvas边界框和中心点标记
      * 
@@ -436,7 +467,7 @@ public abstract class Shape extends Canvas {
         gc.setLineDashes(null); // 实线
         gc.setStroke(Color.RED);
         gc.setLineWidth(1);
-        
+
         double crossSize = 8;
         gc.strokeLine(centerX - crossSize, centerY, centerX + crossSize, centerY); // 水平线
         gc.strokeLine(centerX, centerY - crossSize, centerX, centerY + crossSize); // 垂直线
@@ -444,8 +475,8 @@ public abstract class Shape extends Canvas {
         // 绘制中心点圆圈
         double circleRadius = 3;
         gc.setFill(Color.RED);
-        gc.fillOval(centerX - circleRadius, centerY - circleRadius, 
-                   circleRadius * 2, circleRadius * 2);
+        gc.fillOval(centerX - circleRadius, centerY - circleRadius,
+                circleRadius * 2, circleRadius * 2);
 
         // 恢复原始绘制状态
         gc.setStroke(originalStroke);
@@ -454,9 +485,9 @@ public abstract class Shape extends Canvas {
         gc.setLineDashes(originalLineDashes);
 
         // 输出调试信息到控制台
-        System.out.println("[DebugCanvas] " + this.getClass().getSimpleName() + 
-                          " - Canvas size: " + getWidth() + "x" + getHeight() + 
-                          ", Center at: (" + centerX + "," + centerY + ")" +
-                          ", Position: (" + getLayoutX() + "," + getLayoutY() + ")");
+        System.out.println("[DebugCanvas] " + this.getClass().getSimpleName() +
+                " - Canvas size: " + getWidth() + "x" + getHeight() +
+                ", Center at: (" + centerX + "," + centerY + ")" +
+                ", Position: (" + getLayoutX() + "," + getLayoutY() + ")");
     }
 }
