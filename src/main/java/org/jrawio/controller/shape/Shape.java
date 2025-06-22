@@ -14,20 +14,19 @@ import lombok.Data;
 
 public abstract class Shape extends Canvas {
     /** 是否被选中 */
-    private boolean selected = false;
-    
+    protected boolean selected = false;
+
     /** 被选中的所有图形 */
-    private static final Set<Shape> selectedShapes = new HashSet<>();
+    protected static final Set<Shape> selectedShapes = new HashSet<>();
 
     /** 文本内容 */
-    private String text;
-    
+    protected String text;
+
     /** 文本框控件 */
-    private TextField textField;
+    protected TextField textField;
 
     /** 操作状态机 */
-    private final ShapeStateMachine stateMachine = new ShapeStateMachine();
-
+    protected final ShapeStateMachine stateMachine = new ShapeStateMachine();
 
     /**
      * 内部状态机类 - 管理Shape的交互状态
@@ -51,10 +50,10 @@ public abstract class Shape extends Canvas {
 
         /** 状态相关数据 - 原始场景坐标 */
         private double orgSceneX, orgSceneY;
-        
+
         /** 当前活动的控制点 */
         private ResizeHandleManager.ResizeHandle activeHandle = null;
-        
+
         /** 原始尺寸和位置 */
         private double originalWidth, originalHeight;
         private double originalX, originalY;
@@ -69,6 +68,7 @@ public abstract class Shape extends Canvas {
 
         /**
          * 切换到拖动状态
+         * 
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
          */
@@ -81,13 +81,14 @@ public abstract class Shape extends Canvas {
 
         /**
          * 切换到缩放状态
+         * 
          * @param handle 活动控制点
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
-         * @param width 原始宽度
+         * @param width  原始宽度
          * @param height 原始高度
-         * @param x 原始X位置
-         * @param y 原始Y位置
+         * @param x      原始X位置
+         * @param y      原始Y位置
          */
         public void toResizing(ResizeHandleManager.ResizeHandle handle, double sceneX, double sceneY,
                 double width, double height, double x, double y) {
@@ -103,6 +104,7 @@ public abstract class Shape extends Canvas {
 
         /**
          * 更新原始场景坐标
+         * 
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
          */
@@ -113,6 +115,7 @@ public abstract class Shape extends Canvas {
 
         /**
          * 为交互准备初始坐标
+         * 
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
          */
@@ -124,7 +127,8 @@ public abstract class Shape extends Canvas {
 
     /**
      * 构造函数
-     * @param width 图形宽度
+     * 
+     * @param width  图形宽度
      * @param height 图形高度
      */
     public Shape(double width, double height) {
@@ -143,7 +147,7 @@ public abstract class Shape extends Canvas {
     /**
      * 开始编辑文本
      */
-    private void startEdit() {
+    protected void startEdit() {
         if (textField != null)
             return;
         Pane parent = (Pane) getParent();
@@ -164,7 +168,7 @@ public abstract class Shape extends Canvas {
     /**
      * 完成文本编辑
      */
-    private void finishEdit() {
+    protected void finishEdit() {
         if (textField == null)
             return;
         text = textField.getText();
@@ -176,9 +180,10 @@ public abstract class Shape extends Canvas {
 
     /**
      * 处理鼠标按下事件
+     * 
      * @param event 鼠标事件
      */
-    private void handlePressed(MouseEvent event) {
+    protected void handlePressed(MouseEvent event) {
         System.out.println("[handlePressed]" + this.toString());
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
@@ -203,10 +208,12 @@ public abstract class Shape extends Canvas {
 
     /**
      * 处理鼠标拖拽事件
+     * 
      * @param event 鼠标事件
      */
-    private void handleDragged(MouseEvent event) {
-        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING && stateMachine.getActiveHandle() != null) {
+    protected void handleDragged(MouseEvent event) {
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING
+                && stateMachine.getActiveHandle() != null) {
             handleResize(event);
         } else {
             // 如果当前不是拖动状态，先切换到拖动状态
@@ -221,7 +228,7 @@ public abstract class Shape extends Canvas {
     /**
      * 处理移动操作
      */
-    private void handleMove(MouseEvent event) {
+    protected void handleMove(MouseEvent event) {
         double offsetX = event.getSceneX() - stateMachine.getOrgSceneX();
         double offsetY = event.getSceneY() - stateMachine.getOrgSceneY();
         // 同步移动所有被选中的Shape
@@ -241,7 +248,7 @@ public abstract class Shape extends Canvas {
     /**
      * 处理缩放操作
      */
-    private void handleResize(MouseEvent event) {
+    protected void handleResize(MouseEvent event) {
         double deltaX = event.getSceneX() - stateMachine.getOrgSceneX();
         double deltaY = event.getSceneY() - stateMachine.getOrgSceneY();
 
@@ -254,10 +261,10 @@ public abstract class Shape extends Canvas {
         );
 
         // 应用新的尺寸和位置
-        setShapeWidth(newDimensions[0]);  // newWidth
+        setShapeWidth(newDimensions[0]); // newWidth
         setShapeHeight(newDimensions[1]); // newHeight
-        setLayoutX(newDimensions[2]);     // newX
-        setLayoutY(newDimensions[3]);     // newY
+        setLayoutX(newDimensions[2]); // newX
+        setLayoutY(newDimensions[3]); // newY
 
         // 更新文本框位置
         if (textField != null) {
@@ -269,17 +276,18 @@ public abstract class Shape extends Canvas {
 
     /**
      * 处理鼠标点击事件
+     * 
      * @param event 鼠标事件
      */
-    private void handleClick(MouseEvent event) {
+    protected void handleClick(MouseEvent event) {
         System.out.println("[handleClick]" + this.toString());
         if (event.getClickCount() == 2) {
             startEdit();
             event.consume();
             return;
         }
-        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING || 
-            stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING ||
+                stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
             // 如果是拖动或缩放后产生的点击，忽略
             stateMachine.toIdle();
             return;
@@ -303,6 +311,7 @@ public abstract class Shape extends Canvas {
 
     /**
      * 设置图形选中状态
+     * 
      * @param selected 是否选中
      */
     public void setSelected(boolean selected) {
@@ -325,6 +334,7 @@ public abstract class Shape extends Canvas {
 
     /**
      * 获取文本内容
+     * 
      * @return 文本内容
      */
     public String getText() {
@@ -333,6 +343,7 @@ public abstract class Shape extends Canvas {
 
     /**
      * 设置文本内容
+     * 
      * @param text 文本内容
      */
     public void setText(String text) {
@@ -342,6 +353,7 @@ public abstract class Shape extends Canvas {
 
     /**
      * 设置图形宽度
+     * 
      * @param width 宽度
      */
     public void setShapeWidth(double width) {
@@ -351,6 +363,7 @@ public abstract class Shape extends Canvas {
 
     /**
      * 设置图形高度
+     * 
      * @param height 高度
      */
     public void setShapeHeight(double height) {
@@ -372,7 +385,7 @@ public abstract class Shape extends Canvas {
     /**
      * 绘制图形到画布
      */
-    private void draw() {
+    protected void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 
@@ -391,11 +404,11 @@ public abstract class Shape extends Canvas {
         if (selected) {
             gc.setStroke(Color.BLUE);
             gc.setLineWidth(2); // 使用较粗的线条
-            
+
             // 设置虚线样式
             gc.setLineDashes(5, 5); // 虚线长度为5，间隔为5
             gc.strokeRect(x, y, shapeWidth, shapeHeight);
-            
+
             // 重置为实线，用于绘制控制点
             gc.setLineDashes(null);
             gc.setLineWidth(1);
@@ -427,9 +440,10 @@ public abstract class Shape extends Canvas {
 
     /**
      * 处理鼠标进入事件
+     * 
      * @param event 鼠标事件
      */
-    private void handleMouseEntered(MouseEvent event) {
+    protected void handleMouseEntered(MouseEvent event) {
         // 如果没有选中，设置光标为手指
         if (!selected) {
             setCursor(Cursor.HAND);
@@ -438,18 +452,20 @@ public abstract class Shape extends Canvas {
 
     /**
      * 处理鼠标离开事件
+     * 
      * @param event 鼠标事件
      */
-    private void handleMouseExited(MouseEvent event) {
+    protected void handleMouseExited(MouseEvent event) {
         // 鼠标离开时恢复默认光标
         setCursor(Cursor.DEFAULT);
     }
 
     /**
      * 处理鼠标移动事件
+     * 
      * @param event 鼠标事件
      */
-    private void handleMouseMoved(MouseEvent event) {
+    protected void handleMouseMoved(MouseEvent event) {
         if (!selected) {
             setCursor(Cursor.HAND);
             return;
@@ -465,11 +481,12 @@ public abstract class Shape extends Canvas {
 
     /**
      * 检测鼠标位置是否在某个控制点上
+     * 
      * @param x 鼠标X坐标
      * @param y 鼠标Y坐标
      * @return 控制点类型，如果不在控制点上则返回null
      */
-    private ResizeHandleManager.ResizeHandle getResizeHandleAt(double x, double y) {
+    protected ResizeHandleManager.ResizeHandle getResizeHandleAt(double x, double y) {
         if (!selected)
             return null;
 
@@ -480,16 +497,17 @@ public abstract class Shape extends Canvas {
     /**
      * 重置缩放状态
      */
-    private void resetResizeState() {
+    protected void resetResizeState() {
         stateMachine.toIdle();
         setCursor(Cursor.DEFAULT);
     }
 
     /**
      * 处理鼠标释放事件
+     * 
      * @param event 鼠标事件
      */
-    private void handleMouseReleased(MouseEvent event) {
+    protected void handleMouseReleased(MouseEvent event) {
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.RESIZING) {
             resetResizeState();
             // 通知右侧面板更新尺寸信息
