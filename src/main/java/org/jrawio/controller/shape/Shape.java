@@ -139,7 +139,8 @@ public abstract class Shape extends Canvas {
 
         this.setOnMousePressed(this::handlePressed);
         this.setOnMouseDragged(this::handleDragged);
-        this.setOnMouseClicked(this::handleClick);
+        // 移除MouseClicked绑定，避免与handlePressed中的handleClick调用冲突
+        // this.setOnMouseClicked(this::handleClick);
         this.setOnMouseMoved(this::handleMouseMoved);
         this.setOnMouseReleased(this::handleMouseReleased);
         this.setOnMouseEntered(this::handleMouseEntered);
@@ -156,8 +157,9 @@ public abstract class Shape extends Canvas {
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
 
-        // 拖动时如果未选中，则先选中自己
-        if (!selected) {
+        // 如果是多选操作（Ctrl/Shift按下），或者图形未选中，调用点击处理
+        boolean multiSelect = event.isShiftDown() || event.isControlDown();
+        if (multiSelect || !selected) {
             handleClick(event);
         }
         event.consume();

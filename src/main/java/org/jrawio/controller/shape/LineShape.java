@@ -132,9 +132,10 @@ public abstract class LineShape extends Shape {
             }
         }
 
-        // 拖动时如果未选中，则先选中自己（但不取消其他图形的选中状态）
-        if (!selected) {
-            setSelected(true);
+        // 如果是多选操作（Ctrl/Shift按下），或者图形未选中，调用点击处理
+        boolean multiSelect = event.isShiftDown() || event.isControlDown();
+        if (multiSelect || !selected) {
+            handleClick(event);
         }
         event.consume();
     }

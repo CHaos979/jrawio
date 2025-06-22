@@ -42,8 +42,9 @@ public abstract class BlockShape extends Shape {
             }
         }
 
-        // 拖动时如果未选中，则先选中自己
-        if (!selected) {
+        // 如果是多选操作（Ctrl/Shift按下），或者图形未选中，调用点击处理
+        boolean multiSelect = event.isShiftDown() || event.isControlDown();
+        if (multiSelect || !selected) {
             handleClick(event);
         }
         event.consume();
