@@ -58,7 +58,7 @@ public class ShapeButton implements Initializable {
         
         // 使用对应的Shape类来绘制预览
         Shape previewShape = ShapeFactory.createShape(shapeType, previewWidth, previewHeight);
-        previewShape.drawPreview(gc, padding, padding, previewWidth, previewHeight);
+        previewShape.drawShape(gc, padding, padding, previewWidth, previewHeight);
     }
     
     /**
@@ -81,7 +81,7 @@ public class ShapeButton implements Initializable {
         
         // 使用对应的Shape类来绘制预览
         Shape previewShape = ShapeFactory.createShape(shapeType, shapeWidth, shapeHeight);
-        previewShape.drawPreview(gc, padding, padding, shapeWidth, shapeHeight);
+        previewShape.drawShape(gc, padding, padding, shapeWidth, shapeHeight);
         
         // 将画布内容转换为图片，使用更高的DPI来提高清晰度
         javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();

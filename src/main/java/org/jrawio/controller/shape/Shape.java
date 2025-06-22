@@ -367,19 +367,7 @@ public abstract class Shape extends Canvas {
      * @param width  绘制宽度
      * @param height 绘制高度
      */
-    protected abstract void drawShape(GraphicsContext gc, double x, double y, double width, double height);
-
-    /**
-     * 公共方法：用于预览绘制（不包含选中状态和文本）
-     * @param gc 图形上下文
-     * @param x 绘制X坐标
-     * @param y 绘制Y坐标
-     * @param width 绘制宽度
-     * @param height 绘制高度
-     */
-    public final void drawPreview(GraphicsContext gc, double x, double y, double width, double height) {
-        drawShape(gc, x, y, width, height);
-    }
+    public abstract void drawShape(GraphicsContext gc, double x, double y, double width, double height);
 
     /**
      * 绘制图形到画布

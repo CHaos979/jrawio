@@ -13,7 +13,7 @@ public class RectangleShape extends Shape {
     }
     
     @Override
-    protected void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
+    public void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
         // 设置绘制样式
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
