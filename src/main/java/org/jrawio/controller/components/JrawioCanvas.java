@@ -11,6 +11,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeFactory;
+import org.jrawio.controller.shape.ShapeType;
 import java.util.Arrays;
 import java.util.List;
 
@@ -94,7 +95,7 @@ public class JrawioCanvas {
         setupDragOver();
         setupDragDropped();
     }
-
+    
     /**
      * 设置拖拽悬停事件
      */
@@ -126,26 +127,25 @@ public class JrawioCanvas {
     /**
      * 检查是否为支持的形状类型
      */
-    private boolean isSupportedShapeType(String identifier) {
+    private boolean isSupportedShapeType(String shapeTypeName) {
         try {
-            for (org.jrawio.controller.shape.ShapeType type : org.jrawio.controller.shape.ShapeType.values()) {
-                if (type.getIdentifier().equals(identifier)) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            // 忽略异常
+            ShapeType.valueOf(shapeTypeName);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
         }
-        return false;
     }
 
     /**
      * 从拖拽创建形状
      */
-    private boolean createShapeFromDrag(String identifier, double x, double y) {
+    private boolean createShapeFromDrag(String shapeTypeName, double x, double y) {
         try {
-            // 使用ShapeFactory根据标识符创建Shape对象
-            Shape shape = ShapeFactory.createShape(identifier, 80, 80);
+            // 直接通过枚举名称获取ShapeType
+            ShapeType shapeType = ShapeType.valueOf(shapeTypeName);
+            
+            // 使用ShapeFactory根据枚举类型创建Shape对象
+            Shape shape = ShapeFactory.createShape(shapeType, 80, 80);
             // 设置放置位置
             shape.setLayoutX(x - shape.getWidth() / 2);
             shape.setLayoutY(y - shape.getHeight() / 2);
@@ -153,7 +153,7 @@ public class JrawioCanvas {
             return true;
         } catch (IllegalArgumentException e) {
             // 不支持的形状类型，忽略
-            System.err.println("不支持的形状类型: " + identifier);
+            System.err.println("不支持的形状类型: " + shapeTypeName);
             return false;
         }
     }
