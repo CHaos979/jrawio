@@ -1,5 +1,7 @@
 package org.jrawio.controller.shape;
 
+import javafx.geometry.Point2D;
+
 /**
  * Shape几何计算工具类
  * 提供与图形位置、尺寸计算相关的静态工具方法
@@ -81,5 +83,92 @@ public class ShapeGeometryUtils {
         double textY = totalHeight / 2 + fontSize / 2; // 稍微向下偏移以视觉居中
         
         return new double[] { textX, textY };
+    }
+    
+    /**
+     * 根据两个点计算边界框
+     * 
+     * @param point1 第一个点
+     * @param point2 第二个点
+     * @return 包含[minX, minY, maxX, maxY]的数组
+     */
+    public static double[] calculateBoundingBox(Point2D point1, Point2D point2) {
+        double minX = Math.min(point1.getX(), point2.getX());
+        double minY = Math.min(point1.getY(), point2.getY());
+        double maxX = Math.max(point1.getX(), point2.getX());
+        double maxY = Math.max(point1.getY(), point2.getY());
+        
+        return new double[] { minX, minY, maxX, maxY };
+    }
+    
+    /**
+     * 根据边界框计算所需的canvas尺寸
+     * 
+     * @param boundingBox 边界框 [minX, minY, maxX, maxY]
+     * @param padding 边距
+     * @param minWidth 最小宽度
+     * @param minHeight 最小高度
+     * @return 包含[width, height]的数组
+     */
+    public static double[] calculateCanvasSize(double[] boundingBox, double padding, 
+                                             double minWidth, double minHeight) {
+        double minX = boundingBox[0];
+        double minY = boundingBox[1];
+        double maxX = boundingBox[2];
+        double maxY = boundingBox[3];
+        
+        double width = (maxX - minX) + 2 * padding;
+        double height = (maxY - minY) + 2 * padding;
+        
+        // 确保最小尺寸
+        width = Math.max(width, minWidth);
+        height = Math.max(height, minHeight);
+        
+        return new double[] { width, height };
+    }
+    
+    /**
+     * 根据边界框和canvas尺寸计算canvas位置
+     * 
+     * @param boundingBox 边界框 [minX, minY, maxX, maxY]
+     * @param padding 边距
+     * @return 包含[canvasX, canvasY]的数组
+     */
+    public static double[] calculateCanvasPosition(double[] boundingBox, double padding) {
+        double minX = boundingBox[0];
+        double minY = boundingBox[1];
+        
+        double canvasX = minX - padding;
+        double canvasY = minY - padding;
+        
+        return new double[] { canvasX, canvasY };
+    }
+    
+    /**
+     * 将绝对坐标转换为相对于canvas的坐标
+     * 
+     * @param absolutePoint 绝对坐标点
+     * @param canvasPosition canvas位置 [canvasX, canvasY]
+     * @return 相对坐标点
+     */
+    public static Point2D toRelativeCoordinate(Point2D absolutePoint, double[] canvasPosition) {
+        return new Point2D(
+            absolutePoint.getX() - canvasPosition[0],
+            absolutePoint.getY() - canvasPosition[1]
+        );
+    }
+    
+    /**
+     * 计算两点连线的中心点
+     * 
+     * @param point1 第一个点
+     * @param point2 第二个点
+     * @return 中心点
+     */
+    public static Point2D calculateLineCenter(Point2D point1, Point2D point2) {
+        return new Point2D(
+            (point1.getX() + point2.getX()) / 2.0,
+            (point1.getY() + point2.getY()) / 2.0
+        );
     }
 }

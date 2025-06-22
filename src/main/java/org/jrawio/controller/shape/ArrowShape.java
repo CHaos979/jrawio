@@ -51,18 +51,49 @@ public class ArrowShape extends Shape {
     }
     
     /**
-     * 构造函数 - 指定起始点和结束点
+     * 根据两个点创建箭头的构造函数
+     * 会自动计算合适的canvas大小
      * 
-     * @param width      图形宽度
-     * @param height     图形高度
+     * @param startPoint 起始点（绝对坐标）
+     * @param endPoint   结束点（绝对坐标）
+     */
+    public ArrowShape(Point2D startPoint, Point2D endPoint) {
+        // 先计算所需的canvas大小，然后调用父类构造函数
+        super(calculateCanvasDimensions(startPoint, endPoint)[0], 
+              calculateCanvasDimensions(startPoint, endPoint)[1]);
+        
+        // 重新计算相关数据
+        double[] boundingBox = ShapeGeometryUtils.calculateBoundingBox(startPoint, endPoint);
+        double padding = 20;
+        double[] canvasPosition = ShapeGeometryUtils.calculateCanvasPosition(boundingBox, padding);
+        
+        // 转换为相对坐标
+        Point2D relativeStart = ShapeGeometryUtils.toRelativeCoordinate(startPoint, canvasPosition);
+        Point2D relativeEnd = ShapeGeometryUtils.toRelativeCoordinate(endPoint, canvasPosition);
+        
+        // 设置起始点和结束点
+        this.startPoint = relativeStart;
+        this.endPoint = relativeEnd;
+        
+        // 设置位置
+        setLayoutX(canvasPosition[0]);
+        setLayoutY(canvasPosition[1]);
+        
+        // 重新绘制以应用指定的点
+        draw();
+    }
+    
+    /**
+     * 计算canvas尺寸的辅助方法
+     * 
      * @param startPoint 起始点
      * @param endPoint   结束点
+     * @return [width, height]数组
      */
-    public ArrowShape(double width, double height, Point2D startPoint, Point2D endPoint) {
-        super(width, height);
-        this.startPoint = startPoint;
-        this.endPoint = endPoint;
-        draw(); // 重新绘制以应用指定的点
+    private static double[] calculateCanvasDimensions(Point2D startPoint, Point2D endPoint) {
+        double[] boundingBox = ShapeGeometryUtils.calculateBoundingBox(startPoint, endPoint);
+        double padding = 20;
+        return ShapeGeometryUtils.calculateCanvasSize(boundingBox, padding, 60, 40);
     }
     
     /**
@@ -72,9 +103,14 @@ public class ArrowShape extends Shape {
      * @param height 图形高度
      */
     private void initializePoints(double width, double height) {
-        // 让箭头从左侧中心指向右侧中心，这样看起来更美观
-        this.startPoint = new Point2D(width * 0.15, height * 0.5);
-        this.endPoint = new Point2D(width * 0.85, height * 0.5);
+        // 设置默认的起始点和结束点（相对坐标）
+        double defaultStartX = 20;  // 左边距20像素
+        double defaultStartY = height / 2;  // 垂直居中
+        double defaultEndX = width - 20;  // 右边距20像素
+        double defaultEndY = height / 2;  // 垂直居中
+        
+        this.startPoint = new Point2D(defaultStartX, defaultStartY);
+        this.endPoint = new Point2D(defaultEndX, defaultEndY);
     }
     
     /**
@@ -466,53 +502,45 @@ public class ArrowShape extends Shape {
 
     /**
      * 调整canvas大小以适应箭头的范围
-     * Canvas大小完全由起始点和终点直接确定，canvas中心是两点连线的中心
+     * 根据起始点和结束点直接计算所需的canvas宽高
      */
     private void adjustCanvasSizeToFitArrow() {
         if (startPoint == null || endPoint == null) return;
 
-        // 计算两点连线的中心点
-        double centerX = (startPoint.getX() + endPoint.getX()) / 2.0;
-        double centerY = (startPoint.getY() + endPoint.getY()) / 2.0;
-
-        // 计算箭头的边界框
-        double minX = Math.min(startPoint.getX(), endPoint.getX());
-        double minY = Math.min(startPoint.getY(), endPoint.getY());
-        double maxX = Math.max(startPoint.getX(), endPoint.getX());
-        double maxY = Math.max(startPoint.getY(), endPoint.getY());
-
-        // 添加边距以确保箭头头部和控制点有足够空间
+        // 使用工具类计算边界框
+        double[] boundingBox = ShapeGeometryUtils.calculateBoundingBox(startPoint, endPoint);
+        
+        // 计算所需的canvas尺寸
         double padding = 20;
-        double arrowWidth = (maxX - minX) + 2 * padding;
-        double arrowHeight = (maxY - minY) + 2 * padding;
+        double[] canvasSize = ShapeGeometryUtils.calculateCanvasSize(boundingBox, padding, 60, 40);
+        double requiredWidth = canvasSize[0];
+        double requiredHeight = canvasSize[1];
 
-        // 确保最小尺寸
-        arrowWidth = Math.max(arrowWidth, 40);
-        arrowHeight = Math.max(arrowHeight, 40);
+        // 计算两点连线的中心点
+        Point2D lineCenter = ShapeGeometryUtils.calculateLineCenter(startPoint, endPoint);
 
         // 计算新的canvas位置，使canvas中心与两点连线中心对齐
-        double newLayoutX = getLayoutX() + centerX - arrowWidth / 2.0;
-        double newLayoutY = getLayoutY() + centerY - arrowHeight / 2.0;
+        double newLayoutX = getLayoutX() + lineCenter.getX() - requiredWidth / 2.0;
+        double newLayoutY = getLayoutY() + lineCenter.getY() - requiredHeight / 2.0;
 
         // 计算起始点和结束点在新canvas中的坐标
-        double newStartX = startPoint.getX() - centerX + arrowWidth / 2.0;
-        double newStartY = startPoint.getY() - centerY + arrowHeight / 2.0;
-        double newEndX = endPoint.getX() - centerX + arrowWidth / 2.0;
-        double newEndY = endPoint.getY() - centerY + arrowHeight / 2.0;
+        double newStartX = startPoint.getX() - lineCenter.getX() + requiredWidth / 2.0;
+        double newStartY = startPoint.getY() - lineCenter.getY() + requiredHeight / 2.0;
+        double newEndX = endPoint.getX() - lineCenter.getX() + requiredWidth / 2.0;
+        double newEndY = endPoint.getY() - lineCenter.getY() + requiredHeight / 2.0;
 
-        // 更新位置和大小
+        // 更新canvas位置和大小
         setLayoutX(newLayoutX);
         setLayoutY(newLayoutY);
-        setShapeWidth(arrowWidth);
-        setShapeHeight(arrowHeight);
+        setShapeWidth(requiredWidth);
+        setShapeHeight(requiredHeight);
 
         // 更新起始点和结束点坐标（相对于新的canvas）
         startPoint = new Point2D(newStartX, newStartY);
         endPoint = new Point2D(newEndX, newEndY);
 
-        System.out.println("[AdjustCanvas] Canvas centered on arrow line center");
-        System.out.println("[AdjustCanvas] Arrow line center: (" + centerX + "," + centerY + ")");
-        System.out.println("[AdjustCanvas] New canvas size: " + arrowWidth + "x" + arrowHeight);
+        System.out.println("[AdjustCanvas] Canvas size calculated from two points using utility methods");
+        System.out.println("[AdjustCanvas] Required size: " + requiredWidth + "x" + requiredHeight);
         System.out.println("[AdjustCanvas] New canvas position: (" + newLayoutX + "," + newLayoutY + ")");
         System.out.println("[AdjustCanvas] New StartPoint: " + startPoint + ", EndPoint: " + endPoint);
     }
