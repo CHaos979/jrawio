@@ -436,6 +436,9 @@ public abstract class Shape extends Canvas {
 
             gc.fillText(text, textX, textY);
         }
+
+        // 绘制调试信息（canvas边界和中心点）
+        drawDebugInfo(gc);
     }
 
     /**
@@ -519,4 +522,54 @@ public abstract class Shape extends Canvas {
         event.consume();
     }
 
+    /**
+     * 绘制调试信息
+     * 包括canvas边界框和中心点标记
+     * 
+     * @param gc 图形上下文
+     */
+    protected void drawDebugInfo(GraphicsContext gc) {
+        // 保存当前绘制状态
+        Color originalStroke = (Color) gc.getStroke();
+        Color originalFill = (Color) gc.getFill();
+        double originalLineWidth = gc.getLineWidth();
+        double[] originalLineDashes = gc.getLineDashes();
+
+        // 绘制canvas边界框
+        gc.setStroke(Color.RED);
+        gc.setLineWidth(1);
+        gc.setLineDashes(2, 2); // 红色虚线边框
+        gc.strokeRect(0, 0, getWidth(), getHeight());
+
+        // 计算并绘制canvas中心点
+        double centerX = getWidth() / 2.0;
+        double centerY = getHeight() / 2.0;
+
+        // 绘制中心点十字标记
+        gc.setLineDashes(null); // 实线
+        gc.setStroke(Color.RED);
+        gc.setLineWidth(1);
+        
+        double crossSize = 8;
+        gc.strokeLine(centerX - crossSize, centerY, centerX + crossSize, centerY); // 水平线
+        gc.strokeLine(centerX, centerY - crossSize, centerX, centerY + crossSize); // 垂直线
+
+        // 绘制中心点圆圈
+        double circleRadius = 3;
+        gc.setFill(Color.RED);
+        gc.fillOval(centerX - circleRadius, centerY - circleRadius, 
+                   circleRadius * 2, circleRadius * 2);
+
+        // 恢复原始绘制状态
+        gc.setStroke(originalStroke);
+        gc.setFill(originalFill);
+        gc.setLineWidth(originalLineWidth);
+        gc.setLineDashes(originalLineDashes);
+
+        // 输出调试信息到控制台
+        System.out.println("[DebugCanvas] " + this.getClass().getSimpleName() + 
+                          " - Canvas size: " + getWidth() + "x" + getHeight() + 
+                          ", Center at: (" + centerX + "," + centerY + ")" +
+                          ", Position: (" + getLayoutX() + "," + getLayoutY() + ")");
+    }
 }

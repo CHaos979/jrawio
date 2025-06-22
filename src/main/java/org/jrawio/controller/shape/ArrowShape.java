@@ -314,12 +314,7 @@ public class ArrowShape extends Shape {
         // 如果选中，绘制箭头控制点
         if (selected) {
             drawArrowControlPoints(gc, x, y, shapeWidth, shapeHeight);
-            // 绘制箭头线段中心点用于调试
-            drawArrowLineCenter(gc, x, y, shapeWidth, shapeHeight);
         }
-
-        // 绘制canvas中心点用于调试
-        drawCanvasCenter(gc);
 
         // 绘制文本
         if (text != null && !text.isEmpty() && textField == null) {
@@ -340,83 +335,9 @@ public class ArrowShape extends Shape {
 
             gc.fillText(text, textX, textY);
         }
-    }
 
-    /**
-     * 绘制canvas中心点用于调试
-     * 在canvas中心绘制一个红色十字标记
-     */
-    private void drawCanvasCenter(GraphicsContext gc) {
-        // 计算canvas中心点
-        double centerX = getWidth() / 2.0;
-        double centerY = getHeight() / 2.0;
-
-        // 保存当前绘制状态
-        Color originalStroke = (Color) gc.getStroke();
-        double originalLineWidth = gc.getLineWidth();
-
-        // 设置调试绘制属性
-        gc.setStroke(Color.RED);
-        gc.setLineWidth(1);
-
-        // 绘制十字标记
-        double crossSize = 6;
-        gc.strokeLine(centerX - crossSize, centerY, centerX + crossSize, centerY); // 水平线
-        gc.strokeLine(centerX, centerY - crossSize, centerX, centerY + crossSize); // 垂直线
-
-        // 绘制中心点圆圈
-        double circleRadius = 2;
-        gc.strokeOval(centerX - circleRadius, centerY - circleRadius, 
-                     circleRadius * 2, circleRadius * 2);
-
-        // 恢复原始绘制状态
-        gc.setStroke(originalStroke);
-        gc.setLineWidth(originalLineWidth);
-
-        System.out.println("[DebugCenter] Canvas size: " + getWidth() + "x" + getHeight() + 
-                          ", Center at: (" + centerX + "," + centerY + ")");
-    }
-
-    /**
-     * 绘制箭头线段中心点用于调试
-     * 在两点连线的中心绘制一个绿色十字标记
-     */
-    private void drawArrowLineCenter(GraphicsContext gc, double drawX, double drawY, double drawWidth, double drawHeight) {
-        if (startPoint == null || endPoint == null) return;
-
-        // 计算实际的起始点和结束点坐标
-        double actualStartX = drawX + (startPoint.getX() / getWidth()) * drawWidth;
-        double actualStartY = drawY + (startPoint.getY() / getHeight()) * drawHeight;
-        double actualEndX = drawX + (endPoint.getX() / getWidth()) * drawWidth;
-        double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
-
-        // 计算箭头线段的中心点
-        double lineCenterX = (actualStartX + actualEndX) / 2.0;
-        double lineCenterY = (actualStartY + actualEndY) / 2.0;
-
-        // 保存当前绘制状态
-        Color originalStroke = (Color) gc.getStroke();
-        double originalLineWidth = gc.getLineWidth();
-
-        // 设置调试绘制属性
-        gc.setStroke(Color.GREEN);
-        gc.setLineWidth(1);
-
-        // 绘制十字标记
-        double crossSize = 8;
-        gc.strokeLine(lineCenterX - crossSize, lineCenterY, lineCenterX + crossSize, lineCenterY); // 水平线
-        gc.strokeLine(lineCenterX, lineCenterY - crossSize, lineCenterX, lineCenterY + crossSize); // 垂直线
-
-        // 绘制中心点圆圈
-        double circleRadius = 3;
-        gc.strokeOval(lineCenterX - circleRadius, lineCenterY - circleRadius, 
-                     circleRadius * 2, circleRadius * 2);
-
-        // 恢复原始绘制状态
-        gc.setStroke(originalStroke);
-        gc.setLineWidth(originalLineWidth);
-
-        System.out.println("[DebugLineCenter] Arrow line center at: (" + lineCenterX + "," + lineCenterY + ")");
+        // 绘制调试信息（canvas边界和中心点）
+        drawDebugInfo(gc);
     }
 
     /**
