@@ -352,7 +352,12 @@ public class ArrowShape extends Shape {
 
         ArrowControlPoint controlPoint = getArrowControlPointAt(event.getX(), event.getY());
         if (controlPoint != null) {
-            setCursor(Cursor.HAND);
+            // 在箭头控制点上时使用缩放光标
+            if (controlPoint == ArrowControlPoint.START_POINT) {
+                setCursor(Cursor.CROSSHAIR);  
+            } else if (controlPoint == ArrowControlPoint.END_POINT) {
+                setCursor(Cursor.CROSSHAIR); 
+            }
         } else {
             setCursor(Cursor.HAND);
         }
@@ -374,7 +379,19 @@ public class ArrowShape extends Shape {
     protected void handleMouseReleased(MouseEvent event) {
         if (activeArrowControlPoint != null) {
             activeArrowControlPoint = null;
-            setCursor(Cursor.DEFAULT);
+            
+            // 释放后重新检查鼠标位置，设置合适的光标
+            ArrowControlPoint controlPoint = getArrowControlPointAt(event.getX(), event.getY());
+            if (controlPoint != null) {
+                if (controlPoint == ArrowControlPoint.START_POINT) {
+                    setCursor(Cursor.MOVE);
+                } else if (controlPoint == ArrowControlPoint.END_POINT) {
+                    setCursor(Cursor.CROSSHAIR);
+                }
+            } else {
+                setCursor(Cursor.HAND);
+            }
+            
             // 通知右侧面板更新
             RightPanel rightPanel = RightPanel.getInstance();
             if (rightPanel != null) {
@@ -410,6 +427,13 @@ public class ArrowShape extends Shape {
      */
     private void handleArrowControlPointDrag(MouseEvent event) {
         System.out.println("[ArrowControlPointDrag] Moving " + activeArrowControlPoint);
+        
+        // 在拖拽过程中保持相应的光标样式
+        if (activeArrowControlPoint == ArrowControlPoint.START_POINT) {
+            setCursor(Cursor.MOVE);
+        } else if (activeArrowControlPoint == ArrowControlPoint.END_POINT) {
+            setCursor(Cursor.CROSSHAIR);
+        }
         
         // 将鼠标位置转换为相对于箭头形状的本地坐标
         double localX = event.getX();
