@@ -400,15 +400,6 @@ public class ArrowShape extends Shape {
     }
 
     /**
-     * 重写getResizeHandleAt方法，让它返回null，因为箭头不使用标准的缩放控制点
-     */
-    @Override
-    protected ResizeHandleManager.ResizeHandle getResizeHandleAt(double x, double y) {
-        // 箭头形状不使用标准的缩放控制点
-        return null;
-    }
-
-    /**
      * 处理鼠标释放事件
      */
     @Override

@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 /**
  * 椭圆/圆形图形实现类
  */
-public class OvalShape extends Shape {
+public class OvalShape extends BlockShape {
     
     public OvalShape(double width, double height) {
         super(width, height);

@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 /**
  * 矩形图形实现类
  */
-public class RectangleShape extends Shape {
+public class RectangleShape extends BlockShape {
     
     public RectangleShape(double width, double height) {
         super(width, height);
