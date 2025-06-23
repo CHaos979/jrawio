@@ -27,4 +27,29 @@ public class ShapeFactory {
                 throw new IllegalArgumentException("不支持的形状类型: " + shapeType);
         }
     }
+
+    /**
+     * 通过拷贝构造创建形状实例
+     * 
+     * @param shapeType 形状类型枚举
+     * @param sourceShape 源形状对象
+     * @return 创建的形状拷贝实例
+     * @throws IllegalArgumentException 当形状类型不支持时抛出
+     */
+    public static Shape createShapeByCopy(ShapeType shapeType, Shape sourceShape) {
+        if (sourceShape == null) {
+            throw new IllegalArgumentException("源形状对象不能为空");
+        }
+        
+        switch (shapeType) {
+            case OVAL:
+                return new OvalShape((OvalShape) sourceShape);
+            case RECTANGLE:
+                return new RectangleShape((RectangleShape) sourceShape);
+            case ARROW:
+                return new ArrowShape((ArrowShape) sourceShape);
+            default:
+                throw new IllegalArgumentException("不支持的形状类型: " + shapeType);
+        }
+    }
 }
