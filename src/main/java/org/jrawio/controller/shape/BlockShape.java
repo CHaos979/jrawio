@@ -226,8 +226,15 @@ public abstract class BlockShape extends Shape {
             dragEndPoint = new Point2D(event.getSceneX(), event.getSceneY());
         }
 
-        // 更新当前箭头结束点
-        currentArrowEndPoint = dragEndPoint;
+        // 检查是否有可吸附的目标形状
+        Point2D snapPoint = findSnapTargetPoint(dragEndPoint, container);
+        if (snapPoint != null) {
+            // 使用吸附点作为箭头结束点
+            currentArrowEndPoint = snapPoint;
+        } else {
+            // 使用原始拖拽点
+            currentArrowEndPoint = dragEndPoint;
+        }
 
         // 清除之前的临时箭头
         if (temporaryArrow != null) {
@@ -260,7 +267,18 @@ public abstract class BlockShape extends Shape {
 
         if (container != null) {
             // 将场景坐标转换为容器坐标
-            finalEndPoint = container.sceneToLocal(event.getSceneX(), event.getSceneY());
+            Point2D rawEndPoint = container.sceneToLocal(event.getSceneX(), event.getSceneY());
+
+            // 检查是否有可吸附的目标形状
+            Point2D snapPoint = findSnapTargetPoint(rawEndPoint, container);
+            if (snapPoint != null) {
+                // 使用吸附点作为最终箭头结束点
+                finalEndPoint = snapPoint;
+                System.out.println("Arrow snapped to point: " + snapPoint);
+            } else {
+                // 使用原始拖拽点
+                finalEndPoint = rawEndPoint;
+            }
         } else {
             finalEndPoint = new Point2D(event.getSceneX(), event.getSceneY());
         }
@@ -407,6 +425,53 @@ public abstract class BlockShape extends Shape {
 
         // 绘制调试信息（canvas边界和中心点）
         drawDebugInfo(gc);
+    }
+
+    /**
+     * 查找可吸附的目标点
+     * 遍历容器中的其他形状，查找最近的可吸附点
+     * 
+     * @param mousePoint 鼠标当前位置（容器坐标）
+     * @param container  形状容器
+     * @return 最近的可吸附点，如果没有找到则返回null
+     */
+    protected Point2D findSnapTargetPoint(Point2D mousePoint, Pane container) {
+        if (container == null) {
+            return null;
+        }
+
+        double snapRadius = 20.0; // 吸附半径，可以根据需要调整
+        Point2D nearestSnapPoint = null;
+        double minDistance = Double.MAX_VALUE;
+
+        // 遍历容器中的所有子节点
+        for (javafx.scene.Node node : container.getChildren()) {
+            // 只处理BlockShape类型的节点，且不是当前形状本身
+            if (node instanceof BlockShape && node != this) {
+                BlockShape targetShape = (BlockShape) node;
+
+                // 将鼠标点转换为目标形状的本地坐标
+                Point2D localMousePoint = targetShape.parentToLocal(mousePoint);
+
+                // 使用目标形状的吸附点查找方法
+                Point2D shapeSnapPoint = targetShape.findNearestSnapPoint(localMousePoint, snapRadius);
+
+                if (shapeSnapPoint != null) {
+                    // 将形状本地坐标转换回容器坐标
+                    Point2D containerSnapPoint = targetShape.localToParent(shapeSnapPoint);
+
+                    // 计算距离
+                    double distance = mousePoint.distance(containerSnapPoint);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestSnapPoint = containerSnapPoint;
+                    }
+                }
+            }
+        }
+
+        return nearestSnapPoint;
     }
 
     /**
