@@ -12,13 +12,13 @@ import org.jrawio.controller.components.RightPanel;
  * 包含起始点和结束点属性，以及拖拽缩放的通用逻辑
  */
 public abstract class LineShape extends Shape {
-    
+
     /** 起始点坐标（相对于Shape的坐标系） */
     protected Point2D startPoint;
-    
+
     /** 结束点坐标（相对于Shape的坐标系） */
     protected Point2D endPoint;
-    
+
     /** 控制点半径 */
     protected static final double CONTROL_POINT_SIZE = 6.0;
     private BlockShape start, end;
@@ -26,12 +26,12 @@ public abstract class LineShape extends Shape {
     /** 线形控制点类型 */
     public enum LineControlPoint {
         START_POINT, // 起始点控制点
-        END_POINT    // 结束点控制点
+        END_POINT // 结束点控制点
     }
-    
+
     /** 当前活动的线形控制点 */
     protected LineControlPoint activeLineControlPoint = null;
-    
+
     /**
      * 构造函数
      * 
@@ -44,7 +44,7 @@ public abstract class LineShape extends Shape {
         initializePoints(width, height);
         draw(); // 重新绘制以应用初始点
     }
-    
+
     /**
      * 根据两个点创建线形的构造函数
      * 会自动计算合适的canvas大小
@@ -54,30 +54,30 @@ public abstract class LineShape extends Shape {
      */
     public LineShape(Point2D startPoint, Point2D endPoint) {
         // 先计算所需的canvas大小，然后调用父类构造函数
-        super(calculateCanvasDimensions(startPoint, endPoint)[0], 
-              calculateCanvasDimensions(startPoint, endPoint)[1]);
-        
+        super(calculateCanvasDimensions(startPoint, endPoint)[0],
+                calculateCanvasDimensions(startPoint, endPoint)[1]);
+
         // 重新计算相关数据
         double[] boundingBox = ShapeGeometryUtils.calculateBoundingBox(startPoint, endPoint);
         double padding = 20;
         double[] canvasPosition = ShapeGeometryUtils.calculateCanvasPosition(boundingBox, padding);
-        
+
         // 转换为相对坐标
         Point2D relativeStart = ShapeGeometryUtils.toRelativeCoordinate(startPoint, canvasPosition);
         Point2D relativeEnd = ShapeGeometryUtils.toRelativeCoordinate(endPoint, canvasPosition);
-        
+
         // 设置起始点和结束点
         this.startPoint = relativeStart;
         this.endPoint = relativeEnd;
-        
+
         // 设置位置
         setLayoutX(canvasPosition[0]);
         setLayoutY(canvasPosition[1]);
-        
+
         // 重新绘制以应用指定的点
         draw();
     }
-    
+
     /**
      * 计算canvas尺寸的辅助方法
      * 
@@ -90,7 +90,7 @@ public abstract class LineShape extends Shape {
         double padding = 20;
         return ShapeGeometryUtils.calculateCanvasSize(boundingBox, padding, 60, 40);
     }
-    
+
     /**
      * 初始化默认的起始点和结束点
      * 
@@ -99,15 +99,15 @@ public abstract class LineShape extends Shape {
      */
     protected void initializePoints(double width, double height) {
         // 设置默认的起始点和结束点（相对坐标）
-        double defaultStartX = 20;  // 左边距20像素
-        double defaultStartY = height / 2;  // 垂直居中
-        double defaultEndX = width - 20;  // 右边距20像素
-        double defaultEndY = height / 2;  // 垂直居中
-        
+        double defaultStartX = 20; // 左边距20像素
+        double defaultStartY = height / 2; // 垂直居中
+        double defaultEndX = width - 20; // 右边距20像素
+        double defaultEndY = height / 2; // 垂直居中
+
         this.startPoint = new Point2D(defaultStartX, defaultStartY);
         this.endPoint = new Point2D(defaultEndX, defaultEndY);
     }
-    
+
     /**
      * 重写控制点交互处理，检查线形控制点
      */
@@ -123,7 +123,7 @@ public abstract class LineShape extends Shape {
         }
         return false; // 没有控制点或没有处理
     }
-    
+
     /**
      * 检测鼠标位置是否在某个线形控制点上
      * 
@@ -132,7 +132,8 @@ public abstract class LineShape extends Shape {
      * @return 控制点类型，如果不在控制点上则返回null
      */
     protected LineControlPoint getLineControlPointAt(double x, double y) {
-        if (!selected) return null;
+        if (!selected)
+            return null;
 
         double padding = 4;
         double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
@@ -165,10 +166,12 @@ public abstract class LineShape extends Shape {
     /**
      * 绘制线形控制点
      */
-    protected void drawLineControlPoints(GraphicsContext gc, double drawX, double drawY, double drawWidth, double drawHeight) {
+    protected void drawLineControlPoints(GraphicsContext gc, double drawX, double drawY, double drawWidth,
+            double drawHeight) {
         // 只有在被选中时才绘制控制点
-        if (!selected) return;
-        
+        if (!selected)
+            return;
+
         // 计算实际的起始点和结束点坐标
         double actualStartX = drawX + (startPoint.getX() / getWidth()) * drawWidth;
         double actualStartY = drawY + (startPoint.getY() / getHeight()) * drawHeight;
@@ -176,23 +179,23 @@ public abstract class LineShape extends Shape {
         double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
 
         // 设置控制点样式 - 与其他图形保持一致
-        gc.setFill(Color.WHITE);  // 白色填充
+        gc.setFill(Color.WHITE); // 白色填充
         gc.setStroke(Color.BLUE); // 蓝色边框
-        gc.setLineWidth(1);       // 边框宽度为1
+        gc.setLineWidth(1); // 边框宽度为1
 
         // 绘制起始点控制点 - 使用矩形而不是圆形，与其他图形一致
-        gc.fillRect(actualStartX - CONTROL_POINT_SIZE / 2, actualStartY - CONTROL_POINT_SIZE / 2, 
-                   CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
-        gc.strokeRect(actualStartX - CONTROL_POINT_SIZE / 2, actualStartY - CONTROL_POINT_SIZE / 2, 
-                     CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
+        gc.fillRect(actualStartX - CONTROL_POINT_SIZE / 2, actualStartY - CONTROL_POINT_SIZE / 2,
+                CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
+        gc.strokeRect(actualStartX - CONTROL_POINT_SIZE / 2, actualStartY - CONTROL_POINT_SIZE / 2,
+                CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
 
         // 绘制结束点控制点 - 使用矩形而不是圆形，与其他图形一致
-        gc.fillRect(actualEndX - CONTROL_POINT_SIZE / 2, actualEndY - CONTROL_POINT_SIZE / 2, 
-                   CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
-        gc.strokeRect(actualEndX - CONTROL_POINT_SIZE / 2, actualEndY - CONTROL_POINT_SIZE / 2, 
-                     CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
+        gc.fillRect(actualEndX - CONTROL_POINT_SIZE / 2, actualEndY - CONTROL_POINT_SIZE / 2,
+                CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
+        gc.strokeRect(actualEndX - CONTROL_POINT_SIZE / 2, actualEndY - CONTROL_POINT_SIZE / 2,
+                CONTROL_POINT_SIZE, CONTROL_POINT_SIZE);
     }
-    
+
     /**
      * 处理鼠标移动事件 - 更新光标
      */
@@ -207,9 +210,9 @@ public abstract class LineShape extends Shape {
         if (controlPoint != null) {
             // 在线形控制点上时使用缩放光标
             if (controlPoint == LineControlPoint.START_POINT) {
-                setCursor(Cursor.CROSSHAIR);  
+                setCursor(Cursor.CROSSHAIR);
             } else if (controlPoint == LineControlPoint.END_POINT) {
-                setCursor(Cursor.CROSSHAIR); 
+                setCursor(Cursor.CROSSHAIR);
             }
         } else {
             setCursor(Cursor.HAND);
@@ -223,7 +226,7 @@ public abstract class LineShape extends Shape {
     protected boolean handleSpecificRelease(MouseEvent event) {
         if (activeLineControlPoint != null) {
             activeLineControlPoint = null;
-            
+
             // 释放后重新检查鼠标位置，设置合适的光标
             LineControlPoint controlPoint = getLineControlPointAt(event.getX(), event.getY());
             if (controlPoint != null) {
@@ -235,7 +238,7 @@ public abstract class LineShape extends Shape {
             } else {
                 setCursor(Cursor.HAND);
             }
-            
+
             // 通知右侧面板更新
             RightPanel rightPanel = RightPanel.getInstance();
             if (rightPanel != null) {
@@ -259,17 +262,30 @@ public abstract class LineShape extends Shape {
     }
 
     /**
+     * 重写拖拽开始前的处理
+     * 当线形被拖拽时断开所有连接
+     */
+    @Override
+    protected boolean onBeforeSelectionHandling(MouseEvent event) {
+        // 如果不是在控制点上，且这是一个拖拽操作的开始，则断开所有连接
+        if (selected && getLineControlPointAt(event.getX(), event.getY()) == null) {
+            disconnectAll();
+        }
+        return false; // 继续执行标准的选择处理
+    }
+
+    /**
      * 处理线形控制点的拖拽
      */
     protected void handleLineControlPointDrag(MouseEvent event) {
-        
+
         // 在拖拽过程中保持相应的光标样式
         if (activeLineControlPoint == LineControlPoint.START_POINT) {
             setCursor(Cursor.MOVE);
         } else if (activeLineControlPoint == LineControlPoint.END_POINT) {
             setCursor(Cursor.CROSSHAIR);
         }
-        
+
         // 将鼠标位置转换为相对于线形的本地坐标
         double localX = event.getX();
         double localY = event.getY();
@@ -300,11 +316,12 @@ public abstract class LineShape extends Shape {
      * 根据起始点和结束点直接计算所需的canvas宽高
      */
     protected void adjustCanvasSizeToFitLine() {
-        if (startPoint == null || endPoint == null) return;
+        if (startPoint == null || endPoint == null)
+            return;
 
         // 使用工具类计算边界框
         double[] boundingBox = ShapeGeometryUtils.calculateBoundingBox(startPoint, endPoint);
-        
+
         // 计算所需的canvas尺寸
         double padding = 20;
         double[] canvasSize = ShapeGeometryUtils.calculateCanvasSize(boundingBox, padding, 60, 40);
@@ -335,7 +352,7 @@ public abstract class LineShape extends Shape {
         endPoint = new Point2D(newEndX, newEndY);
 
     }
-    
+
     /**
      * 获取起始点
      * 
@@ -344,7 +361,8 @@ public abstract class LineShape extends Shape {
     public Point2D getStartPoint() {
         return startPoint;
     }
-      /**
+
+    /**
      * 设置起始点
      * 
      * @param startPoint 起始点坐标
@@ -355,7 +373,7 @@ public abstract class LineShape extends Shape {
         adjustCanvasSizeToFitLine();
         draw();
     }
-    
+
     /**
      * 获取结束点
      * 
@@ -364,7 +382,7 @@ public abstract class LineShape extends Shape {
     public Point2D getEndPoint() {
         return endPoint;
     }
-    
+
     /**
      * 设置结束点
      * 
@@ -376,7 +394,7 @@ public abstract class LineShape extends Shape {
         adjustCanvasSizeToFitLine();
         draw();
     }
-    
+
     /**
      * 设置线形的起始点和结束点
      * 
@@ -390,7 +408,7 @@ public abstract class LineShape extends Shape {
         adjustCanvasSizeToFitLine();
         draw();
     }
-    
+
     /**
      * 获取起始连接的形状
      * 
@@ -398,7 +416,9 @@ public abstract class LineShape extends Shape {
      */
     public BlockShape getStartShape() {
         return start;
-    }    /**
+    }
+
+    /**
      * 设置起始连接的形状
      * 
      * @param start 起始连接的BlockShape
@@ -408,7 +428,7 @@ public abstract class LineShape extends Shape {
         if (this.start != null) {
             this.start.removeLineStart(this);
         }
-        
+
         // 建立新连接
         this.start = start;
         if (start != null) {
@@ -435,7 +455,7 @@ public abstract class LineShape extends Shape {
         if (this.end != null) {
             this.end.removeLineEnd(this);
         }
-        
+
         // 建立新连接
         this.end = end;
         if (end != null) {
@@ -488,6 +508,7 @@ public abstract class LineShape extends Shape {
      * 断开所有连接
      */
     public void disconnectAll() {
+        System.out.println("LineShape.disconnectAll() called - start: " + start + ", end: " + end);
         if (start != null) {
             start.removeLineStart(this);
             start = null;
@@ -496,6 +517,7 @@ public abstract class LineShape extends Shape {
             end.removeLineEnd(this);
             end = null;
         }
+        System.out.println("LineShape.disconnectAll() completed - start: " + start + ", end: " + end);
     }
 
     /**
