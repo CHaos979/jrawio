@@ -3,10 +3,14 @@ package org.jrawio.controller.shape;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.Cursor;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import org.jrawio.controller.components.RightPanel;
 import org.jrawio.controller.shape.Shape.ShapeStateMachine.InteractionState;
 
@@ -26,15 +30,18 @@ public abstract class Shape extends Canvas {
 
     /** 文本框控件 */
     protected TextField textField;
-
     /** 操作状态机 */
     protected final ShapeStateMachine stateMachine = new ShapeStateMachine();
+
+    /** 右键菜单 */
+    protected ContextMenu shapeContextMenu;
 
     /**
      * 内部状态机类 - 管理Shape的交互状态
      */
     @Data
-    public static class ShapeStateMachine {        /**
+    public static class ShapeStateMachine {
+        /**
          * 互斥的交互状态枚举
          */
         public enum InteractionState {
@@ -52,27 +59,32 @@ public abstract class Shape extends Canvas {
         private InteractionState currentState = InteractionState.IDLE;
 
         /** 状态相关数据 - 原始场景坐标 */
-        private double orgSceneX, orgSceneY;        /** 当前活动的控制点 */
+        private double orgSceneX, orgSceneY;
+        /** 当前活动的控制点 */
         private ResizeHandleManager.ResizeHandle activeHandle = null;
-        
+
         /** 当前活动的箭头控制点 */
         private ArrowHandleManager.ArrowHandle activeArrowHandle = null;
 
         /** 原始尺寸和位置 */
         private double originalWidth, originalHeight;
-        private double originalX, originalY;        /**
+        private double originalX, originalY;
+
+        /**
          * 切换到空闲状态
          */
         public void toIdle() {
             this.currentState = InteractionState.IDLE;
             this.activeHandle = null;
             this.activeArrowHandle = null;
-        }        /**
+        }
+
+        /**
          * 切换到拖动状态
          * 
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
-         */        
+         */
         public void toDragging(double sceneX, double sceneY) {
             this.currentState = InteractionState.DRAGGING;
             this.orgSceneX = sceneX;
@@ -107,8 +119,8 @@ public abstract class Shape extends Canvas {
          * 切换到创建箭头状态
          * 
          * @param arrowHandle 活动箭头控制点
-         * @param sceneX 场景X坐标
-         * @param sceneY 场景Y坐标
+         * @param sceneX      场景X坐标
+         * @param sceneY      场景Y坐标
          */
         public void toCreatingArrow(ArrowHandleManager.ArrowHandle arrowHandle, double sceneX, double sceneY) {
             this.currentState = InteractionState.CREATING_ARROW;
@@ -120,6 +132,7 @@ public abstract class Shape extends Canvas {
 
         /**
          * 获取当前活动的箭头控制点
+         * 
          * @return 活动的箭头控制点
          */
         public ArrowHandleManager.ArrowHandle getActiveArrowHandle() {
@@ -166,6 +179,9 @@ public abstract class Shape extends Canvas {
         this.setOnMouseClicked(this::handleClick);
         this.setOnMouseEntered(this::handleMouseEntered);
         this.setOnMouseExited(this::handleMouseExited);
+
+        // 初始化右键菜单
+        initializeContextMenu();
     }
 
     /**
@@ -176,13 +192,13 @@ public abstract class Shape extends Canvas {
      */
     protected Shape(Shape source) {
         super(source.getWidth(), source.getHeight());
-        
+
         // 复制基本属性
         this.text = source.text;
         // 注意：不复制选中状态和文本框控件，新对象应该是未选中状态
         this.selected = false;
         this.textField = null;
-        
+
         // 设置事件处理器
         this.setOnMousePressed(this::handlePressed);
         this.setOnMouseDragged(this::handleDragged);
@@ -191,7 +207,10 @@ public abstract class Shape extends Canvas {
         this.setOnMouseClicked(this::handleClick);
         this.setOnMouseEntered(this::handleMouseEntered);
         this.setOnMouseExited(this::handleMouseExited);
-        
+
+        // 初始化右键菜单
+        initializeContextMenu();
+
         // 绘制图形
         draw();
     }
@@ -203,6 +222,11 @@ public abstract class Shape extends Canvas {
      * @param event 鼠标事件
      */
     protected final void handlePressed(MouseEvent event) {
+        // 如果是右键点击，不处理选择逻辑，让右键菜单事件处理
+        if (event.isSecondaryButtonDown()) {
+            return;
+        }
+
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
 
@@ -220,7 +244,7 @@ public abstract class Shape extends Canvas {
 
         // 标准的选择处理逻辑
         boolean multiSelect = event.isShiftDown() || event.isControlDown();
-        
+
         // 按住图形时确保选中状态
         if (multiSelect) {
             // 多选模式：切换选中状态
@@ -241,7 +265,7 @@ public abstract class Shape extends Canvas {
 
         // Hook: 让子类进行额外的按下后处理
         onAfterSelectionHandling(event);
-        
+
         event.consume();
     }
 
@@ -339,7 +363,7 @@ public abstract class Shape extends Canvas {
 
         // Hook: 让子类进行额外的释放后处理
         onAfterRelease(event);
-        
+
         event.consume();
     }
 
@@ -363,7 +387,9 @@ public abstract class Shape extends Canvas {
      */
     protected void onAfterRelease(MouseEvent event) {
         // 默认实现：不做任何处理
-    }    /**
+    }
+
+    /**
      * 处理移动操作 - 共通的拖动移动逻辑
      */
     protected void handleMove(MouseEvent event) {
@@ -379,7 +405,7 @@ public abstract class Shape extends Canvas {
                 shape.textField.setLayoutX(shape.getLayoutX() + 4);
                 shape.textField.setLayoutY(shape.getLayoutY() + shape.getHeight() / 2 - 12);
             }
-            
+
             // Hook: 让子类处理形状移动后的额外逻辑（如更新连接线的端点）
             shape.onPositionChanged(offsetX, offsetY);
         }
@@ -418,28 +444,38 @@ public abstract class Shape extends Canvas {
         parent.getChildren().remove(textField);
         textField = null;
         draw();
-    }
-
-    /**
+    }    /**
      * 处理鼠标点击事件
      * 专注于双击编辑逻辑处理
      * 
      * @param event 鼠标事件
      */
     protected void handleClick(MouseEvent event) {
-        
+
         // 重置状态机到空闲状态
         if (stateMachine.getCurrentState() != InteractionState.IDLE) {
             stateMachine.toIdle();
+        }        // 处理右键点击选中逻辑
+        if (event.getButton() == MouseButton.SECONDARY) {
+            // 取消其他所有图形的选中状态
+            for (Shape shape : selectedShapes.toArray(new Shape[0])) {
+                if (shape != this) {
+                    shape.setSelected(false);
+                }
+            }
+            // 选中当前图形
+            setSelected(true);
+            event.consume();
+            return;
         }
-        
+
         // 处理双击编辑
         if (event.getClickCount() == 2) {
             startEdit();
             event.consume();
             return;
         }
-        
+
         event.consume();
     }
 
@@ -483,7 +519,9 @@ public abstract class Shape extends Canvas {
     public void setText(String text) {
         this.text = text;
         draw();
-    }    /**
+    }
+
+    /**
      * 设置图形宽度
      * 
      * @param width 宽度
@@ -675,15 +713,66 @@ public abstract class Shape extends Canvas {
         try {
             // 获取当前对象的具体类型
             Class<?> shapeClass = this.getClass();
-            
+
             // 查找拷贝构造方法：接受同类型对象作为参数的构造方法
             java.lang.reflect.Constructor<?> copyConstructor = shapeClass.getConstructor(shapeClass);
-            
+
             // 调用拷贝构造方法创建新实例
             return (Shape) copyConstructor.newInstance(this);
-            
+
         } catch (Exception e) {
             throw new RuntimeException("无法拷贝Shape对象: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 初始化右键菜单
+     */
+    private void initializeContextMenu() {
+        // 创建右键菜单
+        shapeContextMenu = new ContextMenu();
+
+        // 创建复制菜单项
+        MenuItem copyItem = new MenuItem("复制");
+        copyItem.setOnAction(event -> copyShape());
+
+        // 创建分隔符
+        SeparatorMenuItem separator = new SeparatorMenuItem();
+
+        // 创建删除菜单项
+        MenuItem deleteItem = new MenuItem("删除");
+        deleteItem.setOnAction(event -> deleteShape());
+
+        // 添加菜单项到右键菜单
+        shapeContextMenu.getItems().addAll(copyItem, separator, deleteItem);
+
+        // 设置右键菜单事件
+        setupContextMenuEvents();
+    }    /**
+     * 设置右键菜单事件处理
+     */
+    private void setupContextMenuEvents() {
+        this.setOnContextMenuRequested(event -> {
+            shapeContextMenu.show(this, event.getScreenX(), event.getScreenY());
+            event.consume();
+        });
+    }
+
+    /**
+     * 复制Shape功能
+     * 暂时不实现具体逻辑
+     */
+    private void copyShape() {
+        // TODO: 实现复制功能
+        System.out.println("复制Shape功能待实现");
+    }
+
+    /**
+     * 删除Shape功能
+     * 暂时不实现具体逻辑
+     */
+    private void deleteShape() {
+        // TODO: 实现删除功能
+        System.out.println("删除Shape功能待实现");
     }
 }
