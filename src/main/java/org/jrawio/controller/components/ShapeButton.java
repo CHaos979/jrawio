@@ -88,8 +88,7 @@ public class ShapeButton implements Initializable {
         params.setFill(javafx.scene.paint.Color.TRANSPARENT); // 透明背景
         return tempCanvas.snapshot(params, null);
     }
-    
-    /**
+      /**
      * 设置拖拽功能
      */
     private void setupDragAndDrop() {
@@ -97,11 +96,10 @@ public class ShapeButton implements Initializable {
             Dragboard db = shapeCanvas.startDragAndDrop(TransferMode.COPY);
             ClipboardContent content = new ClipboardContent();
             
-            // 创建ShapeCreator函数式对象（使用独立的可序列化类，包含预定义大小）
-            ShapeCreator shapeCreator = new SimpleShapeCreator(shapeType, DEFAULT_SHAPE_WIDTH, DEFAULT_SHAPE_HEIGHT);
-            
-            // 传递函数式对象（通过序列化）
-            content.put(DragDataFormats.SHAPE_CREATOR_FORMAT, shapeCreator);
+            // 传递形状类型和大小信息
+            content.put(DragDataFormats.SHAPE_TYPE_FORMAT, shapeType);
+            content.put(DragDataFormats.SHAPE_WIDTH_FORMAT, DEFAULT_SHAPE_WIDTH);
+            content.put(DragDataFormats.SHAPE_HEIGHT_FORMAT, DEFAULT_SHAPE_HEIGHT);
             
             // 生成并传递预览图片
             WritableImage previewImage = generatePreviewImage();

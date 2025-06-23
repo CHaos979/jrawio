@@ -10,6 +10,8 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import org.jrawio.controller.shape.Shape;
+import org.jrawio.controller.shape.ShapeType;
+import org.jrawio.controller.shape.ShapeFactory;
 import java.util.Arrays;
 import java.util.List;
 
@@ -93,22 +95,21 @@ public class JrawioCanvas {
         setupDragOver();
         setupDragDropped();
     }
-    
-    /**
+      /**
      * 设置拖拽悬停事件
      */
     private void setupDragOver() {
         canvasPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
-            // 检查是否有ShapeCreator函数式对象
-            if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT)) {
+            // 检查是否有形状类型和大小信息
+            if (db.hasContent(DragDataFormats.SHAPE_TYPE_FORMAT) && 
+                db.hasContent(DragDataFormats.SHAPE_WIDTH_FORMAT) && 
+                db.hasContent(DragDataFormats.SHAPE_HEIGHT_FORMAT)) {
                 event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
         });
-    }
-
-    /**
+    }    /**
      * 设置拖拽放下事件
      */
     private void setupDragDropped() {
@@ -116,29 +117,32 @@ public class JrawioCanvas {
             Dragboard db = event.getDragboard();
             boolean success = false;
             
-            // 使用ShapeCreator函数式对象创建形状
-            if (db.hasContent(DragDataFormats.SHAPE_CREATOR_FORMAT)) {
-                success = createShapeFromCreator(db, event.getX(), event.getY());
+            // 使用形状类型和大小信息创建形状
+            if (db.hasContent(DragDataFormats.SHAPE_TYPE_FORMAT) && 
+                db.hasContent(DragDataFormats.SHAPE_WIDTH_FORMAT) && 
+                db.hasContent(DragDataFormats.SHAPE_HEIGHT_FORMAT)) {
+                success = createShapeFromData(db, event.getX(), event.getY());
             }
             
             event.setDropCompleted(success);
             event.consume();
         });
-    }
-
-    /**
-     * 使用ShapeCreator函数式对象创建形状
+    }    /**
+     * 使用形状类型和大小信息创建形状
      */
-    private boolean createShapeFromCreator(Dragboard db, double x, double y) {
+    private boolean createShapeFromData(Dragboard db, double x, double y) {
         try {
-            // 获取ShapeCreator函数式对象
-            ShapeCreator shapeCreator = (ShapeCreator) db.getContent(DragDataFormats.SHAPE_CREATOR_FORMAT);
-            if (shapeCreator == null) {
+            // 获取形状类型和大小信息
+            ShapeType shapeType = (ShapeType) db.getContent(DragDataFormats.SHAPE_TYPE_FORMAT);
+            Double width = (Double) db.getContent(DragDataFormats.SHAPE_WIDTH_FORMAT);
+            Double height = (Double) db.getContent(DragDataFormats.SHAPE_HEIGHT_FORMAT);
+            
+            if (shapeType == null || width == null || height == null) {
                 return false;
             }
             
-            // 调用函数式对象创建形状（大小由ShapeCreator内部决定）
-            Shape shape = shapeCreator.createShape(); // 参数会被忽略
+            // 使用ShapeFactory创建形状
+            Shape shape = ShapeFactory.createShape(shapeType, width, height);
             
             // 设置放置位置
             shape.setLayoutX(x - shape.getWidth() / 2);
@@ -146,7 +150,7 @@ public class JrawioCanvas {
             canvasPane.getChildren().add(shape);
             return true;
         } catch (Exception e) {
-            System.err.println("使用ShapeCreator创建形状失败: " + e.getMessage());
+            System.err.println("创建形状失败: " + e.getMessage());
             return false;
         }
     }
