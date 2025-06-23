@@ -8,6 +8,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import org.jrawio.controller.components.RightPanel;
 
 /**
@@ -19,6 +23,10 @@ public abstract class BlockShape extends Shape {
     private Point2D arrowStartPoint = null;
     private Point2D currentArrowEndPoint = null;
     private ArrowShape temporaryArrow = null;
+
+    private Set<LineShape> LineStart = new HashSet<>();
+    private Set<LineShape> LineEnd = new HashSet<>();
+    
 
     /**
      * 构造函数
@@ -202,7 +210,6 @@ public abstract class BlockShape extends Shape {
             currentArrowEndPoint = new Point2D(event.getSceneX(), event.getSceneY());
         }
 
-        System.out.println("Arrow creation started from: " + arrowHandle + " at point: " + arrowStartPoint);
 
         // 暂时只处理事件消费，防止进一步传播
         event.consume();
@@ -251,9 +258,7 @@ public abstract class BlockShape extends Shape {
         if (container != null) {
             ArrowCreationManager.addArrowToContainer(temporaryArrow, container);
         }
-    }
-
-    /**
+    }    /**
      * 完成箭头创建
      */
     protected void completeArrowCreation(MouseEvent event) {
@@ -264,17 +269,18 @@ public abstract class BlockShape extends Shape {
         // 获取容器来进行坐标转换
         Pane container = ArrowCreationManager.getShapeContainer(this);
         Point2D finalEndPoint;
+        BlockShape targetShape = null;
 
         if (container != null) {
             // 将场景坐标转换为容器坐标
             Point2D rawEndPoint = container.sceneToLocal(event.getSceneX(), event.getSceneY());
 
             // 检查是否有可吸附的目标形状
-            Point2D snapPoint = findSnapTargetPoint(rawEndPoint, container);
-            if (snapPoint != null) {
+            SnapTargetResult snapResult = findSnapTarget(rawEndPoint, container);
+            if (snapResult != null) {
                 // 使用吸附点作为最终箭头结束点
-                finalEndPoint = snapPoint;
-                System.out.println("Arrow snapped to point: " + snapPoint);
+                finalEndPoint = snapResult.snapPoint;
+                targetShape = snapResult.targetShape;
             } else {
                 // 使用原始拖拽点
                 finalEndPoint = rawEndPoint;
@@ -286,7 +292,6 @@ public abstract class BlockShape extends Shape {
         // 检查箭头长度是否足够（避免创建过短的箭头）
         double distance = arrowStartPoint.distance(finalEndPoint);
         if (distance < 10) { // 最小箭头长度
-            System.out.println("Arrow too short, creation cancelled");
             resetArrowCreationState();
             return;
         }
@@ -304,9 +309,14 @@ public abstract class BlockShape extends Shape {
         // 添加到容器中
         if (container != null) {
             ArrowCreationManager.addArrowToContainer(finalArrow, container);
-            System.out.println("Arrow created from " + arrowStartPoint + " to " + finalEndPoint);
         }
-
+        
+        // 建立双向连接
+        addLineStart(finalArrow);
+        if (targetShape != null) {
+            targetShape.addLineEnd(finalArrow);
+        }
+        
         // 重置状态
         resetArrowCreationState();
     }
@@ -425,23 +435,21 @@ public abstract class BlockShape extends Shape {
 
         // 绘制调试信息（canvas边界和中心点）
         drawDebugInfo(gc);
-    }
-
-    /**
+    }    /**
      * 查找可吸附的目标点
      * 遍历容器中的其他形状，查找最近的可吸附点
      * 
      * @param mousePoint 鼠标当前位置（容器坐标）
      * @param container  形状容器
-     * @return 最近的可吸附点，如果没有找到则返回null
+     * @return 吸附目标结果，如果没有找到则返回null
      */
-    protected Point2D findSnapTargetPoint(Point2D mousePoint, Pane container) {
+    protected SnapTargetResult findSnapTarget(Point2D mousePoint, Pane container) {
         if (container == null) {
             return null;
         }
 
         double snapRadius = 20.0; // 吸附半径，可以根据需要调整
-        Point2D nearestSnapPoint = null;
+        SnapTargetResult nearestTarget = null;
         double minDistance = Double.MAX_VALUE;
 
         // 遍历容器中的所有子节点
@@ -465,13 +473,25 @@ public abstract class BlockShape extends Shape {
 
                     if (distance < minDistance) {
                         minDistance = distance;
-                        nearestSnapPoint = containerSnapPoint;
+                        nearestTarget = new SnapTargetResult(targetShape, containerSnapPoint);
                     }
                 }
             }
         }
 
-        return nearestSnapPoint;
+        return nearestTarget;
+    }
+
+    /**
+     * 查找可吸附的目标点（保持向后兼容）
+     * 遍历容器中的其他形状，查找最近的可吸附点
+     * 
+     * @param mousePoint 鼠标当前位置（容器坐标）
+     * @param container  形状容器
+     * @return 最近的可吸附点，如果没有找到则返回null
+     */    protected Point2D findSnapTargetPoint(Point2D mousePoint, Pane container) {
+        SnapTargetResult result = findSnapTarget(mousePoint, container);
+        return result != null ? result.snapPoint : null;
     }
 
     /**
@@ -492,4 +512,180 @@ public abstract class BlockShape extends Shape {
      * @return 最近的可吸附点，如果没有找到则返回null
      */
     protected abstract Point2D findNearestSnapPoint(Point2D mousePoint, double snapRadius);
+
+    /**
+     * 获取从此形状开始的线形集合
+     * 
+     * @return 线形集合
+     */
+    public Set<LineShape> getLineStart() {
+        return new HashSet<>(LineStart);
+    }
+
+    /**
+     * 获取连接到此形状的线形集合
+     * 
+     * @return 线形集合
+     */
+    public Set<LineShape> getLineEnd() {
+        return new HashSet<>(LineEnd);
+    }
+
+    /**
+     * 添加从此形状开始的线形
+     * 
+     * @param line 线形
+     */
+    public void addLineStart(LineShape line) {
+        LineStart.add(line);
+    }
+
+    /**
+     * 添加连接到此形状的线形
+     * 
+     * @param line 线形
+     */
+    public void addLineEnd(LineShape line) {
+        LineEnd.add(line);
+    }
+
+    /**
+     * 移除从此形状开始的线形
+     * 
+     * @param line 线形
+     */
+    public void removeLineStart(LineShape line) {
+        LineStart.remove(line);
+    }
+
+    /**
+     * 移除连接到此形状的线形
+     * 
+     * @param line 线形
+     */
+    public void removeLineEnd(LineShape line) {
+        LineEnd.remove(line);
+    }
+
+    /**
+     * 重写位置变化后的处理逻辑
+     * 当形状位置改变时，更新所有连接线的端点
+     */
+    @Override
+    protected void onPositionChanged(double offsetX, double offsetY) {
+        updateConnectedLines();
+    }
+
+    /**
+     * 重写尺寸变化后的处理逻辑
+     * 当形状尺寸改变时，更新所有连接线的端点
+     */
+    @Override
+    protected void onSizeChanged() {
+        updateConnectedLines();
+    }
+
+    /**
+     * 更新所有连接的线形的端点位置
+     * 此方法在形状移动或尺寸改变后被调用
+     */
+    protected void updateConnectedLines() {
+        // 更新从此形状开始的线形的起始点
+        for (LineShape line : LineStart) {
+            if (line instanceof ArrowShape) {
+                ArrowShape arrow = (ArrowShape) line;
+                // 根据箭头的方向重新计算起始点
+                Point2D newStartPoint = calculateConnectionPointForArrow(arrow);
+                if (newStartPoint != null) {
+                    // 将绝对坐标转换为相对于线形画布的坐标
+                    Point2D relativeStartPoint = convertToLineRelativeCoordinate(arrow, newStartPoint);
+                    arrow.setStartPoint(relativeStartPoint);
+                }
+            }
+        }
+
+        // 更新连接到此形状的线形的结束点
+        for (LineShape line : LineEnd) {
+            if (line instanceof ArrowShape) {
+                ArrowShape arrow = (ArrowShape) line;
+                // 根据箭头的方向重新计算结束点
+                Point2D newEndPoint = calculateConnectionPointForArrow(arrow);
+                if (newEndPoint != null) {
+                    // 将绝对坐标转换为相对于线形画布的坐标
+                    Point2D relativeEndPoint = convertToLineRelativeCoordinate(arrow, newEndPoint);
+                    arrow.setEndPoint(relativeEndPoint);
+                }
+            }
+        }
+    }
+
+    /**
+     * 为箭头计算连接点
+     * 根据箭头的方向和当前形状的位置计算最佳连接点
+     * 
+     * @param arrow 箭头形状
+     * @return 连接点的绝对坐标
+     */
+    protected Point2D calculateConnectionPointForArrow(ArrowShape arrow) {
+        // 获取箭头的起始点和结束点（绝对坐标）
+        Point2D arrowStart = arrow.localToParent(arrow.getStartPoint());
+        Point2D arrowEnd = arrow.localToParent(arrow.getEndPoint());
+        
+        // 获取当前形状的中心点
+        Point2D shapeCenter = new Point2D(
+            getLayoutX() + getWidth() / 2,
+            getLayoutY() + getHeight() / 2
+        );
+        
+        // 根据箭头的方向确定连接点
+        Point2D targetPoint;
+        if (LineStart.contains(arrow)) {
+            // 如果箭头从此形状开始，使用箭头的结束点来计算方向
+            targetPoint = arrowEnd;
+        } else {
+            // 如果箭头连接到此形状，使用箭头的起始点来计算方向
+            targetPoint = arrowStart;
+        }
+        
+        // 计算从形状中心到目标点的方向
+        double deltaX = targetPoint.getX() - shapeCenter.getX();
+        double deltaY = targetPoint.getY() - shapeCenter.getY();
+          // 确定箭头控制点类型
+        ArrowHandleManager.ArrowHandle arrowHandle;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // 水平方向
+            arrowHandle = deltaX > 0 ? ArrowHandleManager.ArrowHandle.ARROW_RIGHT : ArrowHandleManager.ArrowHandle.ARROW_LEFT;
+        } else {
+            // 垂直方向
+            arrowHandle = deltaY > 0 ? ArrowHandleManager.ArrowHandle.ARROW_BOTTOM : ArrowHandleManager.ArrowHandle.ARROW_TOP;
+        }
+        
+        // 使用现有的方法计算连接点
+        return calculateArrowConnectionPoint(arrowHandle);
+    }
+
+    /**
+     * 将绝对坐标转换为相对于线形画布的坐标
+     * 
+     * @param line 线形
+     * @param absolutePoint 绝对坐标点
+     * @return 相对于线形画布的坐标
+     */
+    protected Point2D convertToLineRelativeCoordinate(LineShape line, Point2D absolutePoint) {
+        return line.parentToLocal(absolutePoint);
+    }
+
+    /**
+     * 吸附目标结果类
+     * 包含目标形状和吸附点信息
+     */
+    protected static class SnapTargetResult {
+        public final BlockShape targetShape;
+        public final Point2D snapPoint;
+        
+        public SnapTargetResult(BlockShape targetShape, Point2D snapPoint) {
+            this.targetShape = targetShape;
+            this.snapPoint = snapPoint;
+        }
+    }
 }

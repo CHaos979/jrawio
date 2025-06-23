@@ -336,9 +336,7 @@ public abstract class Shape extends Canvas {
      */
     protected void onAfterRelease(MouseEvent event) {
         // 默认实现：不做任何处理
-    }
-
-    /**
+    }    /**
      * 处理移动操作 - 共通的拖动移动逻辑
      */
     protected void handleMove(MouseEvent event) {
@@ -354,6 +352,9 @@ public abstract class Shape extends Canvas {
                 shape.textField.setLayoutX(shape.getLayoutX() + 4);
                 shape.textField.setLayoutY(shape.getLayoutY() + shape.getHeight() / 2 - 12);
             }
+            
+            // Hook: 让子类处理形状移动后的额外逻辑（如更新连接线的端点）
+            shape.onPositionChanged(offsetX, offsetY);
         }
         stateMachine.updateOrgScene(event.getSceneX(), event.getSceneY());
     }
@@ -455,9 +456,7 @@ public abstract class Shape extends Canvas {
     public void setText(String text) {
         this.text = text;
         draw();
-    }
-
-    /**
+    }    /**
      * 设置图形宽度
      * 
      * @param width 宽度
@@ -465,6 +464,8 @@ public abstract class Shape extends Canvas {
     public void setShapeWidth(double width) {
         super.setWidth(width);
         draw();
+        // Hook: 让子类处理尺寸变化后的额外逻辑
+        onSizeChanged();
     }
 
     /**
@@ -475,6 +476,8 @@ public abstract class Shape extends Canvas {
     public void setShapeHeight(double height) {
         super.setHeight(height);
         draw();
+        // Hook: 让子类处理尺寸变化后的额外逻辑
+        onSizeChanged();
     }
 
     /**
@@ -613,5 +616,24 @@ public abstract class Shape extends Canvas {
         gc.setLineWidth(originalLineWidth);
         gc.setLineDashes(originalLineDashes);
 
+    }
+
+    /**
+     * Hook方法：位置变化后的额外逻辑
+     * 子类可以重写此方法来在形状位置改变后执行额外操作（如更新连接线端点）
+     * 
+     * @param offsetX X方向的偏移量
+     * @param offsetY Y方向的偏移量
+     */
+    protected void onPositionChanged(double offsetX, double offsetY) {
+        // 默认实现：不做任何处理
+    }
+
+    /**
+     * Hook方法：尺寸变化后的额外逻辑
+     * 子类可以重写此方法来在形状尺寸改变后执行额外操作（如更新连接线端点）
+     */
+    protected void onSizeChanged() {
+        // 默认实现：不做任何处理
     }
 }
