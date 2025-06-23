@@ -12,6 +12,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import org.jrawio.controller.components.RightPanel;
+import org.jrawio.controller.components.ShapeClipboard;
 import org.jrawio.controller.shape.Shape.ShapeStateMachine.InteractionState;
 
 import java.util.HashSet;
@@ -444,7 +445,9 @@ public abstract class Shape extends Canvas {
         parent.getChildren().remove(textField);
         textField = null;
         draw();
-    }    /**
+    }
+
+    /**
      * 处理鼠标点击事件
      * 专注于双击编辑逻辑处理
      * 
@@ -455,7 +458,7 @@ public abstract class Shape extends Canvas {
         // 重置状态机到空闲状态
         if (stateMachine.getCurrentState() != InteractionState.IDLE) {
             stateMachine.toIdle();
-        }        // 处理右键点击选中逻辑
+        } // 处理右键点击选中逻辑
         if (event.getButton() == MouseButton.SECONDARY) {
             // 取消其他所有图形的选中状态
             for (Shape shape : selectedShapes.toArray(new Shape[0])) {
@@ -543,7 +546,9 @@ public abstract class Shape extends Canvas {
         draw();
         // Hook: 让子类处理尺寸变化后的额外逻辑
         onSizeChanged();
-    }    /**
+    }
+
+    /**
      * 抽象方法：由子类实现具体的图形绘制逻辑
      * 
      * @param gc     图形上下文
@@ -754,7 +759,9 @@ public abstract class Shape extends Canvas {
 
         // 设置右键菜单事件
         setupContextMenuEvents();
-    }    /**
+    }
+
+    /**
      * 设置右键菜单事件处理
      */
     private void setupContextMenuEvents() {
@@ -766,11 +773,16 @@ public abstract class Shape extends Canvas {
 
     /**
      * 复制Shape功能
-     * 暂时不实现具体逻辑
+     * 清空剪贴板并将当前图形加入剪贴板
      */
     private void copyShape() {
-        // TODO: 实现复制功能
-        System.out.println("复制Shape功能待实现");
+        // 获取剪贴板实例
+        ShapeClipboard clipboard = ShapeClipboard.getInstance();
+
+        // 复制当前图形到剪贴板
+        clipboard.copy(this, this.getShapeType());
+
+        System.out.println("已复制当前图形到剪贴板");
     }
 
     /**
