@@ -114,7 +114,6 @@ public abstract class LineShape extends Shape {
     protected boolean handleControlPointInteraction(MouseEvent event) {
         LineControlPoint controlPoint = getLineControlPointAt(event.getX(), event.getY());
         if (controlPoint != null) {
-            System.out.println("[LinePressed] Control point detected: " + controlPoint);
             stateMachine.toResizing(null, event.getSceneX(), event.getSceneY(),
                     getWidth(), getHeight(), getLayoutX(), getLayoutY());
             // 保存当前编辑的控制点
@@ -252,7 +251,6 @@ public abstract class LineShape extends Shape {
     @Override
     protected boolean handleSpecificDrag(MouseEvent event) {
         if (activeLineControlPoint != null) {
-            System.out.println("[LineDragged] activeLineControlPoint: " + activeLineControlPoint);
             handleLineControlPointDrag(event);
             return true; // 已处理线形控制点拖拽
         }
@@ -263,7 +261,6 @@ public abstract class LineShape extends Shape {
      * 处理线形控制点的拖拽
      */
     protected void handleLineControlPointDrag(MouseEvent event) {
-        System.out.println("[LineControlPointDrag] Moving " + activeLineControlPoint);
         
         // 在拖拽过程中保持相应的光标样式
         if (activeLineControlPoint == LineControlPoint.START_POINT) {
@@ -277,15 +274,11 @@ public abstract class LineShape extends Shape {
         double localY = event.getY();
 
         // 移除坐标范围限制，允许线形超出当前canvas大小
-        System.out.println("[LineControlPointDrag] New local coordinates: (" + localX + ", " + localY + ")");
-
         // 根据活动的控制点类型更新相应的点
         if (activeLineControlPoint == LineControlPoint.START_POINT) {
             startPoint = new Point2D(localX, localY);
-            System.out.println("[LineControlPointDrag] Updated startPoint: " + startPoint);
         } else if (activeLineControlPoint == LineControlPoint.END_POINT) {
             endPoint = new Point2D(localX, localY);
-            System.out.println("[LineControlPointDrag] Updated endPoint: " + endPoint);
         }
 
         // 调整canvas大小以适应新的线形范围
@@ -340,10 +333,6 @@ public abstract class LineShape extends Shape {
         startPoint = new Point2D(newStartX, newStartY);
         endPoint = new Point2D(newEndX, newEndY);
 
-        System.out.println("[AdjustCanvas] Canvas size calculated from two points using utility methods");
-        System.out.println("[AdjustCanvas] Required size: " + requiredWidth + "x" + requiredHeight);
-        System.out.println("[AdjustCanvas] New canvas position: (" + newLayoutX + "," + newLayoutY + ")");
-        System.out.println("[AdjustCanvas] New StartPoint: " + startPoint + ", EndPoint: " + endPoint);
     }
     
     /**

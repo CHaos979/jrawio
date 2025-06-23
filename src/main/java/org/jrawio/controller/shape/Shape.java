@@ -176,7 +176,6 @@ public abstract class Shape extends Canvas {
      * @param event 鼠标事件
      */
     protected final void handlePressed(MouseEvent event) {
-        System.out.println("[Shape.handlePressed]" + this.toString());
         this.toFront();
         stateMachine.prepareForInteraction(event.getSceneX(), event.getSceneY());
 
@@ -400,7 +399,6 @@ public abstract class Shape extends Canvas {
      * @param event 鼠标事件
      */
     protected void handleClick(MouseEvent event) {
-        System.out.println("[handleClick]" + this.toString());
         
         // 重置状态机到空闲状态
         if (stateMachine.getCurrentState() != InteractionState.IDLE) {
@@ -615,10 +613,5 @@ public abstract class Shape extends Canvas {
         gc.setLineWidth(originalLineWidth);
         gc.setLineDashes(originalLineDashes);
 
-        // 输出调试信息到控制台
-        /* System.out.println("[DebugCanvas] " + this.getClass().getSimpleName() +
-                " - Canvas size: " + getWidth() + "x" + getHeight() +
-                ", Center at: (" + centerX + "," + centerY + ")" +
-                ", Position: (" + getLayoutX() + "," + getLayoutY() + ")"); */
     }
 }
