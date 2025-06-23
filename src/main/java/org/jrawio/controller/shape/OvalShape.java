@@ -82,4 +82,53 @@ public class OvalShape extends BlockShape {
                 return new javafx.geometry.Point2D(centerX, centerY);
         }
     }
+
+    @Override
+    protected Point2D findNearestSnapPoint(Point2D mousePoint, double snapRadius) {
+        // 获取图形的布局坐标和尺寸
+        double shapeWidth = getWidth();
+        double shapeHeight = getHeight();
+        
+        // 计算额外空间（用于箭头控制点）
+        double arrowHandleOffset = ArrowHandleManager.getArrowHandleOffset();
+        double arrowHandleSize = ArrowHandleManager.getArrowHandleSize();
+        double extraSpace = arrowHandleOffset + arrowHandleSize;
+        double padding = 4 + extraSpace;
+        
+        // 计算实际椭圆区域（相对于shape本地坐标）
+        double actualShapeX = padding;
+        double actualShapeY = padding;
+        double actualShapeWidth = shapeWidth - 2 * padding;
+        double actualShapeHeight = shapeHeight - 2 * padding;
+        
+        // 椭圆中心点
+        double centerX = actualShapeX + actualShapeWidth / 2;
+        double centerY = actualShapeY + actualShapeHeight / 2;
+        
+        // 椭圆的半长轴和半短轴
+        double radiusX = actualShapeWidth / 2;
+        double radiusY = actualShapeHeight / 2;
+        
+        // 定义椭圆的四个关键吸附点
+        Point2D topPoint = new Point2D(centerX, centerY - radiusY);      // 上点
+        Point2D bottomPoint = new Point2D(centerX, centerY + radiusY);   // 下点
+        Point2D leftPoint = new Point2D(centerX - radiusX, centerY);     // 左点
+        Point2D rightPoint = new Point2D(centerX + radiusX, centerY);    // 右点
+        
+        Point2D[] snapPoints = {topPoint, bottomPoint, leftPoint, rightPoint};
+        
+        // 查找距离鼠标最近且在吸附半径内的点
+        Point2D nearestPoint = null;
+        double minDistance = Double.MAX_VALUE;
+        
+        for (Point2D snapPoint : snapPoints) {
+            double distance = mousePoint.distance(snapPoint);
+            if (distance <= snapRadius && distance < minDistance) {
+                minDistance = distance;
+                nearestPoint = snapPoint;
+            }
+        }
+        
+        return nearestPoint;
+    }
 }

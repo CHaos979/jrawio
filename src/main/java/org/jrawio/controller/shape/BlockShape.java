@@ -417,4 +417,14 @@ public abstract class BlockShape extends Shape {
      * @return 箭头起始点的绝对坐标
      */
     protected abstract Point2D calculateArrowConnectionPoint(ArrowHandleManager.ArrowHandle arrowHandle);
+
+    /**
+     * 抽象方法：由子类实现查找最近的可吸附点
+     * 子类需要根据自己的形状特点和当前鼠标位置计算最近的可吸附点
+     * 
+     * @param mousePoint 鼠标当前位置（相对于shape的本地坐标）
+     * @param snapRadius 吸附半径，在此半径内的点会被吸附
+     * @return 最近的可吸附点，如果没有找到则返回null
+     */
+    protected abstract Point2D findNearestSnapPoint(Point2D mousePoint, double snapRadius);
 }
