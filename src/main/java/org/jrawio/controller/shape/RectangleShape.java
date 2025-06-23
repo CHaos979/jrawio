@@ -131,7 +131,15 @@ public class RectangleShape extends BlockShape {
                 nearestPoint = snapPoint;
             }
         }
-        
-        return nearestPoint;
+          return nearestPoint;
+    }
+
+    /**
+     * 获取图形类型
+     * @return ShapeType.RECTANGLE
+     */
+    @Override
+    public ShapeType getShapeType() {
+        return ShapeType.RECTANGLE;
     }
 }

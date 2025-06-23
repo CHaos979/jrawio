@@ -138,7 +138,15 @@ public class OvalShape extends BlockShape {
                 nearestPoint = snapPoint;
             }
         }
-        
-        return nearestPoint;
+          return nearestPoint;
+    }
+
+    /**
+     * 获取图形类型
+     * @return ShapeType.OVAL
+     */
+    @Override
+    public ShapeType getShapeType() {
+        return ShapeType.OVAL;
     }
 }

@@ -111,14 +111,12 @@ public class ArrowShape extends LineShape {
         gc.fillPolygon(xPoints, yPoints, 3);
     }
 
+    /**
+     * 获取图形类型
+     * @return ShapeType.ARROW
+     */
     @Override
-    public String toString() {
-        return "ArrowShape{" +
-                "startPoint=" + startPoint +
-                ", endPoint=" + endPoint +
-                ", width=" + getWidth() +
-                ", height=" + getHeight() +
-                ", selected=" + selected +
-                '}';
+    public ShapeType getShapeType() {
+        return ShapeType.ARROW;
     }
 }

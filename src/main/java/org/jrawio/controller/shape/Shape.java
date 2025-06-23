@@ -543,9 +543,7 @@ public abstract class Shape extends Canvas {
         draw();
         // Hook: 让子类处理尺寸变化后的额外逻辑
         onSizeChanged();
-    }
-
-    /**
+    }    /**
      * 抽象方法：由子类实现具体的图形绘制逻辑
      * 
      * @param gc     图形上下文
@@ -555,6 +553,14 @@ public abstract class Shape extends Canvas {
      * @param height 绘制高度
      */
     public abstract void drawShape(GraphicsContext gc, double x, double y, double width, double height);
+
+    /**
+     * 抽象方法：获取图形类型
+     * 子类必须实现此方法来返回对应的ShapeType枚举值
+     * 
+     * @return 图形类型
+     */
+    public abstract ShapeType getShapeType();
 
     /**
      * 绘制图形到画布
