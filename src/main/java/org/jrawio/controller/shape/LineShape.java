@@ -343,14 +343,15 @@ public abstract class LineShape extends Shape {
     public Point2D getStartPoint() {
         return startPoint;
     }
-    
-    /**
+      /**
      * 设置起始点
      * 
      * @param startPoint 起始点坐标
      */
     public void setStartPoint(Point2D startPoint) {
         this.startPoint = startPoint;
+        // 调整canvas大小以适应新的线形范围
+        adjustCanvasSizeToFitLine();
         draw();
     }
     
@@ -370,6 +371,8 @@ public abstract class LineShape extends Shape {
      */
     public void setEndPoint(Point2D endPoint) {
         this.endPoint = endPoint;
+        // 调整canvas大小以适应新的线形范围
+        adjustCanvasSizeToFitLine();
         draw();
     }
     
@@ -382,6 +385,8 @@ public abstract class LineShape extends Shape {
     public void setLinePoints(Point2D startPoint, Point2D endPoint) {
         this.startPoint = startPoint;
         this.endPoint = endPoint;
+        // 调整canvas大小以适应新的线形范围
+        adjustCanvasSizeToFitLine();
         draw();
     }
     
