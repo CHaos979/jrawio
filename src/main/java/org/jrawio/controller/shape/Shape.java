@@ -34,8 +34,7 @@ public abstract class Shape extends Canvas {
      * 内部状态机类 - 管理Shape的交互状态
      */
     @Data
-    public static class ShapeStateMachine {
-        /**
+    public static class ShapeStateMachine {        /**
          * 互斥的交互状态枚举
          */
         public enum InteractionState {
@@ -44,28 +43,30 @@ public abstract class Shape extends Canvas {
             /** 拖动状态 */
             DRAGGING,
             /** 缩放状态 */
-            RESIZING
+            RESIZING,
+            /** 创建箭头状态 */
+            CREATING_ARROW
         }
 
         /** 当前交互状态 */
         private InteractionState currentState = InteractionState.IDLE;
 
         /** 状态相关数据 - 原始场景坐标 */
-        private double orgSceneX, orgSceneY;
-
-        /** 当前活动的控制点 */
+        private double orgSceneX, orgSceneY;        /** 当前活动的控制点 */
         private ResizeHandleManager.ResizeHandle activeHandle = null;
+        
+        /** 当前活动的箭头控制点 */
+        private ArrowHandleManager.ArrowHandle activeArrowHandle = null;
 
         /** 原始尺寸和位置 */
         private double originalWidth, originalHeight;
-        private double originalX, originalY;
-
-        /**
+        private double originalX, originalY;        /**
          * 切换到空闲状态
          */
         public void toIdle() {
             this.currentState = InteractionState.IDLE;
             this.activeHandle = null;
+            this.activeArrowHandle = null;
         }
 
         /**
@@ -73,8 +74,7 @@ public abstract class Shape extends Canvas {
          * 
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
-         */
-        public void toDragging(double sceneX, double sceneY) {
+         */        public void toDragging(double sceneX, double sceneY) {
             this.currentState = InteractionState.DRAGGING;
             this.orgSceneX = sceneX;
             this.orgSceneY = sceneY;
@@ -102,6 +102,29 @@ public abstract class Shape extends Canvas {
             this.originalHeight = height;
             this.originalX = x;
             this.originalY = y;
+        }
+
+        /**
+         * 切换到创建箭头状态
+         * 
+         * @param arrowHandle 活动箭头控制点
+         * @param sceneX 场景X坐标
+         * @param sceneY 场景Y坐标
+         */
+        public void toCreatingArrow(ArrowHandleManager.ArrowHandle arrowHandle, double sceneX, double sceneY) {
+            this.currentState = InteractionState.CREATING_ARROW;
+            this.activeArrowHandle = arrowHandle;
+            this.orgSceneX = sceneX;
+            this.orgSceneY = sceneY;
+            this.activeHandle = null;
+        }
+
+        /**
+         * 获取当前活动的箭头控制点
+         * @return 活动的箭头控制点
+         */
+        public ArrowHandleManager.ArrowHandle getActiveArrowHandle() {
+            return activeArrowHandle;
         }
 
         /**

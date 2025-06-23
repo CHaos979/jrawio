@@ -10,7 +10,14 @@ import org.jrawio.controller.components.RightPanel;
  * 块状图形抽象类 - 负责管理拖动和缩放逻辑
  * 作为Shape和具体形状类（如OvalShape、RectangleShape）之间的中间层
  */
-public abstract class BlockShape extends Shape {    /**
+public abstract class BlockShape extends Shape {
+
+    /** 箭头创建相关字段 */
+    private javafx.geometry.Point2D arrowStartPoint = null;
+    private javafx.geometry.Point2D currentArrowEndPoint = null;
+    private ArrowShape temporaryArrow = null;
+
+    /**
      * 构造函数
      * 
      * @param width  图形宽度
@@ -42,10 +49,8 @@ public abstract class BlockShape extends Shape {    /**
         }
         
         return false; // 没有控制点或没有处理
-    }
-
-    /**
-     * 重写特定拖拽处理，优先处理缩放拖拽
+    }    /**
+     * 重写特定拖拽处理，优先处理缩放拖拽和箭头创建拖拽
      */
     @Override
     protected boolean handleSpecificDrag(MouseEvent event) {
@@ -54,8 +59,15 @@ public abstract class BlockShape extends Shape {    /**
             handleResize(event);
             return true; // 已处理缩放拖拽
         }
+        
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.CREATING_ARROW
+                && stateMachine.getActiveArrowHandle() != null) {
+            handleArrowCreationDrag(event);
+            return true; // 已处理箭头创建拖拽
+        }
+        
         return false; // 没有特定拖拽，使用标准拖拽
-    }    /**
+    }/**
      * 处理缩放操作
      */
     protected void handleResize(MouseEvent event) {
@@ -153,21 +165,136 @@ public abstract class BlockShape extends Shape {    /**
         double padding = 4 + extraSpace; // 原有padding + 箭头控制点所需空间
         
         return ArrowHandleManager.getArrowHandleAt(x, y, getWidth(), getHeight(), padding);
-    }
-
-    /**
+    }    /**
      * 处理箭头控制点点击事件
      * 
      * @param arrowHandle 被点击的箭头控制点
      * @param event 鼠标事件
      */
     protected void handleArrowControlPointClick(ArrowHandleManager.ArrowHandle arrowHandle, MouseEvent event) {
-        // TODO: 实现箭头创建逻辑
-        // 这里可以根据箭头控制点的类型来创建对应方向的箭头
-        System.out.println("Arrow handle clicked: " + arrowHandle);
+        // 启动箭头创建模式
+        stateMachine.toCreatingArrow(arrowHandle, event.getSceneX(), event.getSceneY());
+        
+        // 计算箭头起始点
+        arrowStartPoint = ArrowCreationManager.calculateArrowStartPoint(this, arrowHandle);
+        
+        // 获取容器来进行坐标转换
+        javafx.scene.layout.Pane container = ArrowCreationManager.getShapeContainer(this);
+        if (container != null) {
+            // 将场景坐标转换为容器坐标
+            javafx.geometry.Point2D containerPoint = container.sceneToLocal(event.getSceneX(), event.getSceneY());
+            currentArrowEndPoint = containerPoint;
+        } else {
+            currentArrowEndPoint = new javafx.geometry.Point2D(event.getSceneX(), event.getSceneY());
+        }
+        
+        System.out.println("Arrow creation started from: " + arrowHandle + " at point: " + arrowStartPoint);
         
         // 暂时只处理事件消费，防止进一步传播
         event.consume();
+    }    /**
+     * 处理箭头创建拖拽
+     */
+    protected void handleArrowCreationDrag(MouseEvent event) {
+        if (arrowStartPoint == null) {
+            return;
+        }
+        
+        // 获取容器来进行坐标转换
+        javafx.scene.layout.Pane container = ArrowCreationManager.getShapeContainer(this);
+        javafx.geometry.Point2D dragEndPoint;
+        
+        if (container != null) {
+            // 将场景坐标转换为容器坐标
+            dragEndPoint = container.sceneToLocal(event.getSceneX(), event.getSceneY());
+        } else {
+            dragEndPoint = new javafx.geometry.Point2D(event.getSceneX(), event.getSceneY());
+        }
+        
+        // 更新当前箭头结束点
+        currentArrowEndPoint = dragEndPoint;
+        
+        // 清除之前的临时箭头
+        if (temporaryArrow != null) {
+            if (container != null) {
+                container.getChildren().remove(temporaryArrow);
+            }
+        }
+        
+        // 创建新的临时箭头用于预览
+        temporaryArrow = ArrowCreationManager.createArrow(arrowStartPoint, currentArrowEndPoint);
+        temporaryArrow.setOpacity(0.5); // 设置半透明以表示这是预览
+        
+        // 添加到容器中
+        if (container != null) {
+            ArrowCreationManager.addArrowToContainer(temporaryArrow, container);
+        }
+    }    /**
+     * 完成箭头创建
+     */
+    protected void completeArrowCreation(MouseEvent event) {
+        if (arrowStartPoint == null) {
+            resetArrowCreationState();
+            return;
+        }
+        
+        // 获取容器来进行坐标转换
+        javafx.scene.layout.Pane container = ArrowCreationManager.getShapeContainer(this);
+        javafx.geometry.Point2D finalEndPoint;
+        
+        if (container != null) {
+            // 将场景坐标转换为容器坐标
+            finalEndPoint = container.sceneToLocal(event.getSceneX(), event.getSceneY());
+        } else {
+            finalEndPoint = new javafx.geometry.Point2D(event.getSceneX(), event.getSceneY());
+        }
+        
+        // 检查箭头长度是否足够（避免创建过短的箭头）
+        double distance = arrowStartPoint.distance(finalEndPoint);
+        if (distance < 10) { // 最小箭头长度
+            System.out.println("Arrow too short, creation cancelled");
+            resetArrowCreationState();
+            return;
+        }
+        
+        // 移除临时箭头
+        if (temporaryArrow != null) {
+            if (container != null) {
+                container.getChildren().remove(temporaryArrow);
+            }
+        }
+        
+        // 创建最终的箭头
+        ArrowShape finalArrow = ArrowCreationManager.createArrow(arrowStartPoint, finalEndPoint);
+        
+        // 添加到容器中
+        if (container != null) {
+            ArrowCreationManager.addArrowToContainer(finalArrow, container);
+            System.out.println("Arrow created from " + arrowStartPoint + " to " + finalEndPoint);
+        }
+        
+        // 重置状态
+        resetArrowCreationState();
+    }
+    
+    /**
+     * 重置箭头创建状态
+     */
+    protected void resetArrowCreationState() {
+        // 移除临时箭头
+        if (temporaryArrow != null) {
+            javafx.scene.layout.Pane container = ArrowCreationManager.getShapeContainer(this);
+            if (container != null) {
+                container.getChildren().remove(temporaryArrow);
+            }
+        }
+        
+        // 重置状态
+        stateMachine.toIdle();
+        arrowStartPoint = null;
+        currentArrowEndPoint = null;
+        temporaryArrow = null;
+        setCursor(Cursor.DEFAULT);
     }
 
     /**
@@ -176,10 +303,8 @@ public abstract class BlockShape extends Shape {    /**
     protected void resetResizeState() {
         stateMachine.toIdle();
         setCursor(Cursor.DEFAULT);
-    }
-
-    /**
-     * 重写特定释放处理，处理缩放结束
+    }    /**
+     * 重写特定释放处理，处理缩放结束和箭头创建完成
      */
     @Override
     protected boolean handleSpecificRelease(MouseEvent event) {
@@ -192,8 +317,14 @@ public abstract class BlockShape extends Shape {    /**
             }
             return true; // 已处理缩放释放
         }
+        
+        if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.CREATING_ARROW) {
+            completeArrowCreation(event);
+            return true; // 已处理箭头创建完成
+        }
+        
         return false; // 没有特定释放，使用标准释放
-    }    /**
+    }/**
      * 重写绘制方法，添加箭头控制点的绘制
      */
     @Override
