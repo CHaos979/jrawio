@@ -21,7 +21,8 @@ public abstract class LineShape extends Shape {
     
     /** 控制点半径 */
     protected static final double CONTROL_POINT_SIZE = 6.0;
-    
+    private BlockShape start, end;
+
     /** 线形控制点类型 */
     public enum LineControlPoint {
         START_POINT, // 起始点控制点
@@ -391,6 +392,113 @@ public abstract class LineShape extends Shape {
     }
     
     /**
+     * 获取起始连接的形状
+     * 
+     * @return 起始连接的BlockShape，如果没有连接则返回null
+     */
+    public BlockShape getStartShape() {
+        return start;
+    }    /**
+     * 设置起始连接的形状
+     * 
+     * @param start 起始连接的BlockShape
+     */
+    public void setStartShape(BlockShape start) {
+        // 先断开原有连接
+        if (this.start != null) {
+            this.start.removeLineStart(this);
+        }
+        
+        // 建立新连接
+        this.start = start;
+        if (start != null) {
+            start.addLineStart(this);
+        }
+    }
+
+    /**
+     * 获取结束连接的形状
+     * 
+     * @return 结束连接的BlockShape，如果没有连接则返回null
+     */
+    public BlockShape getEndShape() {
+        return end;
+    }
+
+    /**
+     * 设置结束连接的形状
+     * 
+     * @param end 结束连接的BlockShape
+     */
+    public void setEndShape(BlockShape end) {
+        // 先断开原有连接
+        if (this.end != null) {
+            this.end.removeLineEnd(this);
+        }
+        
+        // 建立新连接
+        this.end = end;
+        if (end != null) {
+            end.addLineEnd(this);
+        }
+    }
+
+    /**
+     * 设置线形连接的起始和结束形状
+     * 
+     * @param startShape 起始连接的BlockShape
+     * @param endShape   结束连接的BlockShape
+     */
+    public void setConnectedShapes(BlockShape startShape, BlockShape endShape) {
+        setStartShape(startShape);
+        setEndShape(endShape);
+    }
+
+    /**
+     * 检查线形是否连接到指定形状
+     * 
+     * @param shape 要检查的形状
+     * @return true如果线形连接到该形状，false如果没有连接
+     */
+    public boolean isConnectedTo(BlockShape shape) {
+        return shape != null && (start == shape || end == shape);
+    }
+
+    /**
+     * 断开与指定形状的连接
+     * 
+     * @param shape 要断开连接的形状
+     */
+    public void disconnectFrom(BlockShape shape) {
+        if (start == shape) {
+            if (start != null) {
+                start.removeLineStart(this);
+            }
+            start = null;
+        }
+        if (end == shape) {
+            if (end != null) {
+                end.removeLineEnd(this);
+            }
+            end = null;
+        }
+    }
+
+    /**
+     * 断开所有连接
+     */
+    public void disconnectAll() {
+        if (start != null) {
+            start.removeLineStart(this);
+            start = null;
+        }
+        if (end != null) {
+            end.removeLineEnd(this);
+            end = null;
+        }
+    }
+
+    /**
      * 绘制线形到画布
      */
     @Override
@@ -447,5 +555,23 @@ public abstract class LineShape extends Shape {
                 ", height=" + getHeight() +
                 ", selected=" + selected +
                 '}';
+    }
+
+    /**
+     * 内部设置起始连接的形状（避免循环调用）
+     * 
+     * @param start 起始连接的BlockShape
+     */
+    protected void setStartShapeInternal(BlockShape start) {
+        this.start = start;
+    }
+
+    /**
+     * 内部设置结束连接的形状（避免循环调用）
+     * 
+     * @param end 结束连接的BlockShape
+     */
+    protected void setEndShapeInternal(BlockShape end) {
+        this.end = end;
     }
 }
