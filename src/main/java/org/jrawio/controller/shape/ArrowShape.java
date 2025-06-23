@@ -27,6 +27,16 @@ public class ArrowShape extends LineShape {
     }
     
     /**
+     * 拷贝构造方法
+     * 创建一个与源ArrowShape具有相同属性的新ArrowShape实例
+     * 
+     * @param source 源ArrowShape对象
+     */
+    public ArrowShape(ArrowShape source) {
+        super(source);
+    }
+    
+    /**
      * 根据两个点创建箭头的构造函数
      * 会自动计算合适的canvas大小
      * 

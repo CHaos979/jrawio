@@ -39,6 +39,26 @@ public abstract class BlockShape extends Shape {
     }
 
     /**
+     * 拷贝构造方法
+     * 创建一个与源BlockShape具有相同属性的新BlockShape实例
+     * 
+     * @param source 源BlockShape对象
+     */
+    protected BlockShape(BlockShape source) {
+        super(source);
+        
+        // 复制BlockShape特有属性
+        // 注意：不复制连接线集合，新对象应该没有连接
+        this.LineStart = new HashSet<>();
+        this.LineEnd = new HashSet<>();
+        
+        // 不复制箭头创建状态，新对象应该是干净状态
+        this.arrowStartPoint = null;
+        this.currentArrowEndPoint = null;
+        this.temporaryArrow = null;
+    }
+
+    /**
      * 重写控制点交互处理，检查缩放控制点和箭头控制点
      */
     @Override

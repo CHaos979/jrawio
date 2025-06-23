@@ -13,6 +13,16 @@ public class OvalShape extends BlockShape {
         super(width, height);
     }
     
+    /**
+     * 拷贝构造方法
+     * 创建一个与源OvalShape具有相同属性的新OvalShape实例
+     * 
+     * @param source 源OvalShape对象
+     */
+    public OvalShape(OvalShape source) {
+        super(source);
+    }
+    
     @Override
     public void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
         // 设置填充颜色为白色

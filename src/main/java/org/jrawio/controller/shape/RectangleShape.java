@@ -13,6 +13,16 @@ public class RectangleShape extends BlockShape {
         super(width, height);
     }
 
+    /**
+     * 拷贝构造方法
+     * 创建一个与源RectangleShape具有相同属性的新RectangleShape实例
+     * 
+     * @param source 源RectangleShape对象
+     */
+    public RectangleShape(RectangleShape source) {
+        super(source);
+    }
+
     @Override
     public void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
         // 设置填充颜色为白色

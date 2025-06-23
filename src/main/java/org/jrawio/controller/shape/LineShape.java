@@ -79,6 +79,30 @@ public abstract class LineShape extends Shape {
     }
 
     /**
+     * 拷贝构造方法
+     * 创建一个与源LineShape具有相同属性的新LineShape实例
+     * 
+     * @param source 源LineShape对象
+     */
+    protected LineShape(LineShape source) {
+        super(source);
+        
+        // 复制LineShape特有属性
+        this.startPoint = new Point2D(source.startPoint.getX(), source.startPoint.getY());
+        this.endPoint = new Point2D(source.endPoint.getX(), source.endPoint.getY());
+        
+        // 不复制连接状态，新对象应该没有连接
+        this.start = null;
+        this.end = null;
+        
+        // 不复制活动控制点状态
+        this.activeLineControlPoint = null;
+        
+        // 重新绘制以应用复制的点
+        draw();
+    }
+
+    /**
      * 计算canvas尺寸的辅助方法
      * 
      * @param startPoint 起始点

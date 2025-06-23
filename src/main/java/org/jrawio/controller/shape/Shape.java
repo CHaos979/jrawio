@@ -67,14 +67,13 @@ public abstract class Shape extends Canvas {
             this.currentState = InteractionState.IDLE;
             this.activeHandle = null;
             this.activeArrowHandle = null;
-        }
-
-        /**
+        }        /**
          * 切换到拖动状态
          * 
          * @param sceneX 场景X坐标
          * @param sceneY 场景Y坐标
-         */        public void toDragging(double sceneX, double sceneY) {
+         */        
+        public void toDragging(double sceneX, double sceneY) {
             this.currentState = InteractionState.DRAGGING;
             this.orgSceneX = sceneX;
             this.orgSceneY = sceneY;
@@ -167,6 +166,34 @@ public abstract class Shape extends Canvas {
         this.setOnMouseClicked(this::handleClick);
         this.setOnMouseEntered(this::handleMouseEntered);
         this.setOnMouseExited(this::handleMouseExited);
+    }
+
+    /**
+     * 拷贝构造方法
+     * 创建一个与源Shape具有相同属性的新Shape实例
+     * 
+     * @param source 源Shape对象
+     */
+    protected Shape(Shape source) {
+        super(source.getWidth(), source.getHeight());
+        
+        // 复制基本属性
+        this.text = source.text;
+        // 注意：不复制选中状态和文本框控件，新对象应该是未选中状态
+        this.selected = false;
+        this.textField = null;
+        
+        // 设置事件处理器
+        this.setOnMousePressed(this::handlePressed);
+        this.setOnMouseDragged(this::handleDragged);
+        this.setOnMouseMoved(this::handleMouseMoved);
+        this.setOnMouseReleased(this::handleMouseReleased);
+        this.setOnMouseClicked(this::handleClick);
+        this.setOnMouseEntered(this::handleMouseEntered);
+        this.setOnMouseExited(this::handleMouseExited);
+        
+        // 绘制图形
+        draw();
     }
 
     /**
@@ -635,5 +662,28 @@ public abstract class Shape extends Canvas {
      */
     protected void onSizeChanged() {
         // 默认实现：不做任何处理
+    }
+
+    /**
+     * 创建当前Shape的拷贝
+     * 使用反射机制调用对应的拷贝构造方法
+     * 
+     * @return 当前Shape的拷贝实例
+     * @throws RuntimeException 如果拷贝失败
+     */
+    public Shape copy() {
+        try {
+            // 获取当前对象的具体类型
+            Class<?> shapeClass = this.getClass();
+            
+            // 查找拷贝构造方法：接受同类型对象作为参数的构造方法
+            java.lang.reflect.Constructor<?> copyConstructor = shapeClass.getConstructor(shapeClass);
+            
+            // 调用拷贝构造方法创建新实例
+            return (Shape) copyConstructor.newInstance(this);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("无法拷贝Shape对象: " + e.getMessage(), e);
+        }
     }
 }
