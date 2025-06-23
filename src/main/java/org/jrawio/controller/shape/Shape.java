@@ -781,8 +781,6 @@ public abstract class Shape extends Canvas {
 
         // 复制当前图形到剪贴板
         clipboard.copy(this, this.getShapeType());
-
-        System.out.println("已复制当前图形到剪贴板");
     }
 
     /**
