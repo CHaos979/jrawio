@@ -617,11 +617,9 @@ public abstract class BlockShape extends Shape {
                 }
             }
         }
-    }
-
-    /**
+    }    /**
      * 为箭头计算连接点
-     * 根据箭头的方向和当前形状的位置计算最佳连接点
+     * 根据箭头的当前端点位置，找到形状上最近的吸附点
      * 
      * @param arrow 箭头形状
      * @return 连接点的绝对坐标
@@ -631,37 +629,29 @@ public abstract class BlockShape extends Shape {
         Point2D arrowStart = arrow.localToParent(arrow.getStartPoint());
         Point2D arrowEnd = arrow.localToParent(arrow.getEndPoint());
         
-        // 获取当前形状的中心点
-        Point2D shapeCenter = new Point2D(
-            getLayoutX() + getWidth() / 2,
-            getLayoutY() + getHeight() / 2
-        );
-        
-        // 根据箭头的方向确定连接点
+        // 根据箭头的连接关系确定要更新的端点
         Point2D targetPoint;
         if (LineStart.contains(arrow)) {
-            // 如果箭头从此形状开始，使用箭头的结束点来计算方向
-            targetPoint = arrowEnd;
-        } else {
-            // 如果箭头连接到此形状，使用箭头的起始点来计算方向
+            // 如果箭头从此形状开始，使用箭头的起始点
             targetPoint = arrowStart;
-        }
-        
-        // 计算从形状中心到目标点的方向
-        double deltaX = targetPoint.getX() - shapeCenter.getX();
-        double deltaY = targetPoint.getY() - shapeCenter.getY();
-          // 确定箭头控制点类型
-        ArrowHandleManager.ArrowHandle arrowHandle;
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            // 水平方向
-            arrowHandle = deltaX > 0 ? ArrowHandleManager.ArrowHandle.ARROW_RIGHT : ArrowHandleManager.ArrowHandle.ARROW_LEFT;
         } else {
-            // 垂直方向
-            arrowHandle = deltaY > 0 ? ArrowHandleManager.ArrowHandle.ARROW_BOTTOM : ArrowHandleManager.ArrowHandle.ARROW_TOP;
+            // 如果箭头连接到此形状，使用箭头的结束点
+            targetPoint = arrowEnd;
         }
         
-        // 使用现有的方法计算连接点
-        return calculateArrowConnectionPoint(arrowHandle);
+        // 将目标点转换为此形状的本地坐标
+        Point2D localPoint = this.parentToLocal(targetPoint);
+        
+        // 使用现有的方法找到最近的吸附点
+        Point2D snapPoint = findNearestSnapPoint(localPoint, Double.MAX_VALUE);
+        
+        if (snapPoint != null) {
+            // 将吸附点转换为绝对坐标
+            return this.localToParent(snapPoint);
+        }
+        
+        // 如果没有找到吸附点，返回原来的位置
+        return targetPoint;
     }
 
     /**
