@@ -34,42 +34,47 @@ public class RightPanel {
                 input.setPrefWidth(120);
                 input.setOnAction(e -> shape.setText(input.getText()));
                 input.focusedProperty().addListener((obs, oldV, newV) -> {
-                    if (!newV) shape.setText(input.getText());
+                    if (!newV)
+                        shape.setText(input.getText());
                 });
                 // 宽度输入框
                 Label widthLabel = new Label("宽度：");
-                TextField widthInput = new TextField(String.valueOf((int)shape.getWidth()));
+                TextField widthInput = new TextField(String.valueOf((int) shape.getWidth()));
                 widthInput.setPrefWidth(80);
                 widthInput.setOnAction(e -> {
                     try {
                         double w = Double.parseDouble(widthInput.getText());
                         shape.setShapeWidth(w);
-                    } catch (Exception ex) {}
+                    } catch (Exception ex) {
+                    }
                 });
                 widthInput.focusedProperty().addListener((obs, oldV, newV) -> {
                     if (!newV) {
                         try {
                             double w = Double.parseDouble(widthInput.getText());
                             shape.setShapeWidth(w);
-                        } catch (Exception ex) {}
+                        } catch (Exception ex) {
+                        }
                     }
                 });
                 // 高度输入框
                 Label heightLabel = new Label("高度：");
-                TextField heightInput = new TextField(String.valueOf((int)shape.getHeight()));
+                TextField heightInput = new TextField(String.valueOf((int) shape.getHeight()));
                 heightInput.setPrefWidth(80);
                 heightInput.setOnAction(e -> {
                     try {
                         double h = Double.parseDouble(heightInput.getText());
                         shape.setShapeHeight(h);
-                    } catch (Exception ex) {}
+                    } catch (Exception ex) {
+                    }
                 });
                 heightInput.focusedProperty().addListener((obs, oldV, newV) -> {
                     if (!newV) {
                         try {
                             double h = Double.parseDouble(heightInput.getText());
                             shape.setShapeHeight(h);
-                        } catch (Exception ex) {}
+                        } catch (Exception ex) {
+                        }
                     }
                 });
                 rightPanelRoot.getChildren().addAll(label, input, widthLabel, widthInput, heightLabel, heightInput);

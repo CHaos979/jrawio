@@ -52,13 +52,17 @@ public class ShapeClipboard {
 
     private ShapeClipboard() {
         this.items = new ArrayList<>();
-    }    /**
+    }
+
+    /**
      * 复制图形
      */
     public void copy(ClipboardItem item) {
         items.add(item);
         calculateCenterPoint();
-    }    /**
+    }
+
+    /**
      * 复制多个图形
      * 
      * @param shapes 要复制的图形列表
@@ -70,7 +74,8 @@ public class ShapeClipboard {
             if (shapeType != null) {
                 items.add(new ClipboardItem(shape, shapeType));
             } else {
-                System.out.println("Warning: Unable to determine shape type for shape: " + shape.getClass().getSimpleName());
+                System.out.println(
+                        "Warning: Unable to determine shape type for shape: " + shape.getClass().getSimpleName());
             }
         }
         calculateCenterPoint();
@@ -129,7 +134,8 @@ public class ShapeClipboard {
                 copiedShape.setLayoutX(originalShape.getLayoutX() + offsetX);
                 copiedShape.setLayoutY(originalShape.getLayoutY() + offsetY);
 
-                pastedShapes.add(copiedShape);            } catch (Exception e) {
+                pastedShapes.add(copiedShape);
+            } catch (Exception e) {
                 // 如果某个图形拷贝失败，跳过并继续处理其他图形
                 System.err.println("Failed to copy shape: " + e.getMessage());
             }

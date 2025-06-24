@@ -56,7 +56,7 @@ public class JrawioCanvas {
         initializeDragAndDrop();
 
         // 初始化右键菜单
-        initializeContextMenu();        // 初始化框选功能
+        initializeContextMenu(); // 初始化框选功能
         initializeSelection();
 
         // 初始化键盘快捷键
@@ -448,10 +448,10 @@ public class JrawioCanvas {
     private void initializeKeyboardShortcuts() {
         // 设置 canvasPane 可以接收键盘焦点
         canvasPane.setFocusTraversable(true);
-        
+
         // 添加键盘事件处理
         canvasPane.setOnKeyPressed(this::handleKeyPressed);
-        
+
         // 确保 canvasPane 在点击时获得焦点
         canvasPane.setOnMouseClicked(event -> {
             canvasPane.requestFocus();

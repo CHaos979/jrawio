@@ -9,14 +9,14 @@ import javafx.scene.layout.FlowPane;
 import org.jrawio.controller.shape.ShapeType;
 
 public class ShapeBar extends TitledPane {
-    
+
     private ShapeBar(List<ShapeType> shapeTypes) {
         // 创建FlowPane作为内容容器
         FlowPane flowPane = new FlowPane();
         flowPane.setHgap(8);
         flowPane.setVgap(8);
         flowPane.setStyle("-fx-padding: 5;");
-        
+
         // 为每个形状类型创建一个ShapeButton
         for (ShapeType shapeType : shapeTypes) {
             try {
@@ -29,7 +29,7 @@ public class ShapeBar extends TitledPane {
                 System.err.println("无法加载形状按钮: " + e.getMessage());
             }
         }
-        
+
         setContent(flowPane);
     }
 
@@ -47,12 +47,12 @@ public class ShapeBar extends TitledPane {
             this.expanded = expanded;
             return this;
         }
-        
+
         public Builder addShapeType(ShapeType shapeType) {
             this.shapeTypes.add(shapeType);
             return this;
         }
-        
+
         public Builder addShapeTypes(ShapeType... shapeTypes) {
             for (ShapeType type : shapeTypes) {
                 this.shapeTypes.add(type);

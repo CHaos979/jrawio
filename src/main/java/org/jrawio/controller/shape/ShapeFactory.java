@@ -5,13 +5,13 @@ package org.jrawio.controller.shape;
  * 负责创建不同类型的形状实例，支持通过枚举类型或字符串标识符创建形状。
  */
 public class ShapeFactory {
-    
+
     /**
      * 根据形状类型创建对应的形状实例
      * 
      * @param shapeType 形状类型枚举
-     * @param width 形状宽度
-     * @param height 形状高度
+     * @param width     形状宽度
+     * @param height    形状高度
      * @return 创建的形状实例
      * @throws IllegalArgumentException 当形状类型不支持时抛出
      */
@@ -31,7 +31,7 @@ public class ShapeFactory {
     /**
      * 通过拷贝构造创建形状实例
      * 
-     * @param shapeType 形状类型枚举
+     * @param shapeType   形状类型枚举
      * @param sourceShape 源形状对象
      * @return 创建的形状拷贝实例
      * @throws IllegalArgumentException 当形状类型不支持时抛出
@@ -40,7 +40,7 @@ public class ShapeFactory {
         if (sourceShape == null) {
             throw new IllegalArgumentException("源形状对象不能为空");
         }
-        
+
         switch (shapeType) {
             case OVAL:
                 return new OvalShape((OvalShape) sourceShape);

@@ -482,7 +482,9 @@ public abstract class Shape extends Canvas {
         }
 
         event.consume();
-    }    /**
+    }
+
+    /**
      * 设置图形选中状态
      * 
      * @param selected 是否选中
@@ -765,7 +767,9 @@ public abstract class Shape extends Canvas {
         // 获取剪贴板实例
         ShapeClipboard clipboard = ShapeClipboard.getInstance();
         clipboard.copy(new ShapeClipboard.ClipboardItem(this, getShapeType()));
-    }    /**
+    }
+
+    /**
      * 删除Shape功能
      * 从画布移除并清理相关引用
      */
@@ -773,16 +777,16 @@ public abstract class Shape extends Canvas {
         try {
             // 1. 清理连接关系（子类实现具体逻辑）
             removeConnectedArrows();
-            
+
             // 2. 从选中图形集合中移除
             selectedShapes.remove(this);
-            
+
             // 3. 从画布中移除
             Pane parent = (Pane) getParent();
             if (parent != null) {
                 parent.getChildren().remove(this);
             }
-            
+
             // 4. 清理文本框（如果存在）
             if (textField != null) {
                 if (parent != null) {
@@ -790,19 +794,19 @@ public abstract class Shape extends Canvas {
                 }
                 textField = null;
             }
-            
+
             // 5. 通知右侧面板更新
             RightPanel rightPanel = RightPanel.getInstance();
             if (rightPanel != null) {
                 rightPanel.onShapeSelectionChanged(selectedShapes);
             }
-            
+
             System.out.println("Shape deleted successfully");
         } catch (Exception e) {
             System.err.println("Failed to delete shape: " + e.getMessage());
         }
     }
-    
+
     /**
      * Hook方法：移除连接的箭头/线形
      * 子类可以重写此方法来处理特定的连接清理逻辑

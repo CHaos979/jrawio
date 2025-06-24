@@ -95,35 +95,35 @@ public class RectangleShape extends BlockShape {
         // 获取图形的尺寸
         double shapeWidth = getWidth();
         double shapeHeight = getHeight();
-        
+
         // 计算额外空间（用于箭头控制点）
         double arrowHandleOffset = ArrowHandleManager.getArrowHandleOffset();
         double arrowHandleSize = ArrowHandleManager.getArrowHandleSize();
         double extraSpace = arrowHandleOffset + arrowHandleSize;
         double padding = 4 + extraSpace;
-        
+
         // 计算实际矩形区域（相对于shape本地坐标）
         double actualShapeX = padding;
         double actualShapeY = padding;
         double actualShapeWidth = shapeWidth - 2 * padding;
         double actualShapeHeight = shapeHeight - 2 * padding;
-        
+
         // 矩形中心点
         double centerX = actualShapeX + actualShapeWidth / 2;
         double centerY = actualShapeY + actualShapeHeight / 2;
-        
+
         // 定义矩形的四个关键吸附点（边的中点）
-        Point2D topPoint = new Point2D(centerX, actualShapeY);                        // 上边中点
+        Point2D topPoint = new Point2D(centerX, actualShapeY); // 上边中点
         Point2D bottomPoint = new Point2D(centerX, actualShapeY + actualShapeHeight); // 下边中点
-        Point2D leftPoint = new Point2D(actualShapeX, centerY);                       // 左边中点
-        Point2D rightPoint = new Point2D(actualShapeX + actualShapeWidth, centerY);   // 右边中点
-        
-        Point2D[] snapPoints = {topPoint, bottomPoint, leftPoint, rightPoint};
-        
+        Point2D leftPoint = new Point2D(actualShapeX, centerY); // 左边中点
+        Point2D rightPoint = new Point2D(actualShapeX + actualShapeWidth, centerY); // 右边中点
+
+        Point2D[] snapPoints = { topPoint, bottomPoint, leftPoint, rightPoint };
+
         // 查找距离鼠标最近且在吸附半径内的点
         Point2D nearestPoint = null;
         double minDistance = Double.MAX_VALUE;
-        
+
         for (Point2D snapPoint : snapPoints) {
             double distance = mousePoint.distance(snapPoint);
             if (distance <= snapRadius && distance < minDistance) {
@@ -131,11 +131,12 @@ public class RectangleShape extends BlockShape {
                 nearestPoint = snapPoint;
             }
         }
-          return nearestPoint;
+        return nearestPoint;
     }
 
     /**
      * 获取图形类型
+     * 
      * @return ShapeType.RECTANGLE
      */
     @Override

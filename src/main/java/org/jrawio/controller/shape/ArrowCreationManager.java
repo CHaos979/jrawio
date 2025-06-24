@@ -8,7 +8,7 @@ import javafx.scene.layout.Pane;
  * 负责处理从BlockShape创建箭头的逻辑
  */
 public class ArrowCreationManager {
-    
+
     /**
      * 根据箭头控制点计算箭头的起始点
      * 
@@ -22,19 +22,19 @@ public class ArrowCreationManager {
         double shapeLayoutY = sourceShape.getLayoutY();
         double shapeWidth = sourceShape.getWidth();
         double shapeHeight = sourceShape.getHeight();
-        
+
         // 计算额外空间（用于箭头控制点）
         double arrowHandleOffset = ArrowHandleManager.getArrowHandleOffset();
         double arrowHandleSize = ArrowHandleManager.getArrowHandleSize();
         double extraSpace = arrowHandleOffset + arrowHandleSize;
         double padding = 4 + extraSpace;
-        
+
         // 计算实际图形区域（不包括padding）
         double actualShapeX = shapeLayoutX + padding;
         double actualShapeY = shapeLayoutY + padding;
         double actualShapeWidth = shapeWidth - 2 * padding;
         double actualShapeHeight = shapeHeight - 2 * padding;
-        
+
         // 根据箭头控制点类型计算连接点
         switch (arrowHandle) {
             case ARROW_TOP:
@@ -50,22 +50,22 @@ public class ArrowCreationManager {
                 return new Point2D(actualShapeX + actualShapeWidth / 2, actualShapeY + actualShapeHeight / 2);
         }
     }
-    
+
     /**
      * 创建箭头形状
      * 
      * @param startPoint 起始点（绝对坐标）
-     * @param endPoint 结束点（绝对坐标）
+     * @param endPoint   结束点（绝对坐标）
      * @return 创建的箭头形状
      */
     public static ArrowShape createArrow(Point2D startPoint, Point2D endPoint) {
         return new ArrowShape(startPoint, endPoint);
     }
-    
+
     /**
      * 将箭头添加到画布容器中
      * 
-     * @param arrow 箭头形状
+     * @param arrow     箭头形状
      * @param container 容器（通常是画布的父容器）
      */
     public static void addArrowToContainer(ArrowShape arrow, Pane container) {
@@ -73,7 +73,7 @@ public class ArrowCreationManager {
             container.getChildren().add(arrow);
         }
     }
-    
+
     /**
      * 获取图形的父容器
      * 

@@ -46,12 +46,12 @@ public abstract class BlockShape extends Shape {
      */
     protected BlockShape(BlockShape source) {
         super(source);
-        
+
         // 复制BlockShape特有属性
         // 注意：不复制连接线集合，新对象应该没有连接
         this.LineStart = new HashSet<>();
         this.LineEnd = new HashSet<>();
-        
+
         // 不复制箭头创建状态，新对象应该是干净状态
         this.arrowStartPoint = null;
         this.currentArrowEndPoint = null;
@@ -716,7 +716,9 @@ public abstract class BlockShape extends Shape {
      */
     protected static class SnapTargetResult {
         public final BlockShape targetShape;
-        public final Point2D snapPoint;        public SnapTargetResult(BlockShape targetShape, Point2D snapPoint) {
+        public final Point2D snapPoint;
+
+        public SnapTargetResult(BlockShape targetShape, Point2D snapPoint) {
             this.targetShape = targetShape;
             this.snapPoint = snapPoint;
         }
