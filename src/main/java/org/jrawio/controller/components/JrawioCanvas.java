@@ -11,6 +11,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.Node;
 import javafx.geometry.Point2D;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.KeyCode;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeType;
 import org.jrawio.controller.shape.ShapeFactory;
@@ -54,10 +56,11 @@ public class JrawioCanvas {
         initializeDragAndDrop();
 
         // 初始化右键菜单
-        initializeContextMenu();
-
-        // 初始化框选功能
+        initializeContextMenu();        // 初始化框选功能
         initializeSelection();
+
+        // 初始化键盘快捷键
+        initializeKeyboardShortcuts();
 
         drawGrid();
     }
@@ -437,5 +440,76 @@ public class JrawioCanvas {
         } else {
             System.out.println("No shapes selected for deletion");
         }
+    }
+
+    /**
+     * 初始化键盘快捷键
+     */
+    private void initializeKeyboardShortcuts() {
+        // 设置 canvasPane 可以接收键盘焦点
+        canvasPane.setFocusTraversable(true);
+        
+        // 添加键盘事件处理
+        canvasPane.setOnKeyPressed(this::handleKeyPressed);
+        
+        // 确保 canvasPane 在点击时获得焦点
+        canvasPane.setOnMouseClicked(event -> {
+            canvasPane.requestFocus();
+        });
+    }
+
+    /**
+     * 处理键盘按键事件
+     */
+    private void handleKeyPressed(KeyEvent event) {
+        // Ctrl+C - 复制选中的图形
+        if (event.isControlDown() && event.getCode() == KeyCode.C) {
+            copySelectedShapes();
+            event.consume();
+        }
+        // Ctrl+V - 粘贴图形
+        else if (event.isControlDown() && event.getCode() == KeyCode.V) {
+            pasteAtCenter();
+            event.consume();
+        }
+        // Delete 键 - 删除选中的图形
+        else if (event.getCode() == KeyCode.DELETE) {
+            deleteSelectedShapes();
+            event.consume();
+        }
+        // Ctrl+A - 全选
+        else if (event.isControlDown() && event.getCode() == KeyCode.A) {
+            selectAllShapes();
+            event.consume();
+        }
+    }
+
+    /**
+     * 在画布中心粘贴图形（用于快捷键粘贴）
+     */
+    private void pasteAtCenter() {
+        // 计算画布中心位置
+        double centerX = canvasPane.getWidth() / 2;
+        double centerY = canvasPane.getHeight() / 2;
+        Point2D centerPosition = new Point2D(centerX, centerY);
+
+        // 获取剪贴板实例
+        ShapeClipboard clipboard = ShapeClipboard.getInstance();
+
+        // 从剪贴板粘贴图形
+        List<Shape> pastedShapes = clipboard.paste(centerPosition);
+
+        if (pastedShapes.isEmpty()) {
+            System.out.println("Clipboard is empty or paste failed");
+            return;
+        }
+
+        // 将粘贴的图形添加到画布
+        for (Shape shape : pastedShapes) {
+            canvasPane.getChildren().add(shape);
+        }
+
+        System.out.println("Successfully pasted " + pastedShapes.size() + " shapes at center position (" +
+                centerX + ", " + centerY + ")");
     }
 }
