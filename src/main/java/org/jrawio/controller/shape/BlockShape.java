@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.jrawio.controller.components.RightPanel;
 
@@ -476,22 +477,18 @@ public abstract class BlockShape extends Shape {
         for (javafx.scene.Node node : container.getChildren()) {
             // 只处理BlockShape类型的节点，且不是当前形状本身
             if (node instanceof BlockShape && node != this) {
-                BlockShape targetShape = (BlockShape) node;
+                BlockShape targetShape = (BlockShape) node; // 获取目标形状的所有可吸附点
+                List<Point2D> snapPoints = targetShape.getAllSnapPoints();
 
-                // 将鼠标点转换为目标形状的本地坐标
-                Point2D localMousePoint = targetShape.parentToLocal(mousePoint);
-
-                // 使用目标形状的吸附点查找方法
-                Point2D shapeSnapPoint = targetShape.findNearestSnapPoint(localMousePoint, snapRadius);
-
-                if (shapeSnapPoint != null) {
+                // 遍历所有吸附点，找到最近的点
+                for (Point2D snapPoint : snapPoints) {
                     // 将形状本地坐标转换回容器坐标
-                    Point2D containerSnapPoint = targetShape.localToParent(shapeSnapPoint);
+                    Point2D containerSnapPoint = targetShape.localToParent(snapPoint);
 
                     // 计算距离
                     double distance = mousePoint.distance(containerSnapPoint);
 
-                    if (distance < minDistance) {
+                    if (distance <= snapRadius && distance < minDistance) {
                         minDistance = distance;
                         nearestTarget = new SnapTargetResult(targetShape, containerSnapPoint);
                     }
@@ -525,14 +522,12 @@ public abstract class BlockShape extends Shape {
     protected abstract Point2D calculateArrowConnectionPoint(ArrowHandleManager.ArrowHandle arrowHandle);
 
     /**
-     * 抽象方法：由子类实现查找最近的可吸附点
-     * 子类需要根据自己的形状特点和当前鼠标位置计算最近的可吸附点
+     * 抽象方法：由子类实现获取所有可吸附点
+     * 子类需要根据自己的形状特点返回所有可用的吸附点
      * 
-     * @param mousePoint 鼠标当前位置（相对于shape的本地坐标）
-     * @param snapRadius 吸附半径，在此半径内的点会被吸附
-     * @return 最近的可吸附点，如果没有找到则返回null
+     * @return 所有可吸附点的列表
      */
-    protected abstract Point2D findNearestSnapPoint(Point2D mousePoint, double snapRadius);
+    protected abstract List<Point2D> getAllSnapPoints();
 
     /**
      * 获取从此形状开始的线形集合
@@ -682,17 +677,25 @@ public abstract class BlockShape extends Shape {
         } else {
             // 如果箭头连接到此形状，使用箭头的结束点
             targetPoint = arrowEnd;
-        }
-
-        // 将目标点转换为此形状的本地坐标
+        } // 将目标点转换为此形状的本地坐标
         Point2D localPoint = this.parentToLocal(targetPoint);
 
-        // 使用现有的方法找到最近的吸附点
-        Point2D snapPoint = findNearestSnapPoint(localPoint, Double.MAX_VALUE);
+        // 获取所有可吸附点，找到最近的点
+        List<Point2D> snapPoints = getAllSnapPoints();
+        Point2D nearestSnapPoint = null;
+        double minDistance = Double.MAX_VALUE;
 
-        if (snapPoint != null) {
+        for (Point2D snapPoint : snapPoints) {
+            double distance = localPoint.distance(snapPoint);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestSnapPoint = snapPoint;
+            }
+        }
+
+        if (nearestSnapPoint != null) {
             // 将吸附点转换为绝对坐标
-            return this.localToParent(snapPoint);
+            return this.localToParent(nearestSnapPoint);
         }
 
         // 如果没有找到吸附点，返回原来的位置

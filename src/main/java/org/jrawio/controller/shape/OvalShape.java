@@ -3,6 +3,7 @@ package org.jrawio.controller.shape;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.geometry.Point2D;
+import java.util.List;
 
 /**
  * 椭圆/圆形图形实现类
@@ -94,7 +95,7 @@ public class OvalShape extends BlockShape {
     }
 
     @Override
-    protected Point2D findNearestSnapPoint(Point2D mousePoint, double snapRadius) {
+    protected List<Point2D> getAllSnapPoints() {
         // 获取图形的布局坐标和尺寸
         double shapeWidth = getWidth();
         double shapeHeight = getHeight();
@@ -125,20 +126,7 @@ public class OvalShape extends BlockShape {
         Point2D leftPoint = new Point2D(centerX - radiusX, centerY); // 左点
         Point2D rightPoint = new Point2D(centerX + radiusX, centerY); // 右点
 
-        Point2D[] snapPoints = { topPoint, bottomPoint, leftPoint, rightPoint };
-
-        // 查找距离鼠标最近且在吸附半径内的点
-        Point2D nearestPoint = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Point2D snapPoint : snapPoints) {
-            double distance = mousePoint.distance(snapPoint);
-            if (distance <= snapRadius && distance < minDistance) {
-                minDistance = distance;
-                nearestPoint = snapPoint;
-            }
-        }
-        return nearestPoint;
+        return java.util.Arrays.asList(topPoint, bottomPoint, leftPoint, rightPoint);
     }
 
     /**

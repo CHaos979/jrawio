@@ -3,6 +3,7 @@ package org.jrawio.controller.shape;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.geometry.Point2D;
+import java.util.List;
 
 /**
  * 矩形图形实现类
@@ -91,7 +92,7 @@ public class RectangleShape extends BlockShape {
     }
 
     @Override
-    protected Point2D findNearestSnapPoint(Point2D mousePoint, double snapRadius) {
+    protected List<Point2D> getAllSnapPoints() {
         // 获取图形的尺寸
         double shapeWidth = getWidth();
         double shapeHeight = getHeight();
@@ -118,20 +119,7 @@ public class RectangleShape extends BlockShape {
         Point2D leftPoint = new Point2D(actualShapeX, centerY); // 左边中点
         Point2D rightPoint = new Point2D(actualShapeX + actualShapeWidth, centerY); // 右边中点
 
-        Point2D[] snapPoints = { topPoint, bottomPoint, leftPoint, rightPoint };
-
-        // 查找距离鼠标最近且在吸附半径内的点
-        Point2D nearestPoint = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Point2D snapPoint : snapPoints) {
-            double distance = mousePoint.distance(snapPoint);
-            if (distance <= snapRadius && distance < minDistance) {
-                minDistance = distance;
-                nearestPoint = snapPoint;
-            }
-        }
-        return nearestPoint;
+        return java.util.Arrays.asList(topPoint, bottomPoint, leftPoint, rightPoint);
     }
 
     /**
