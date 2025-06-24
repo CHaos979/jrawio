@@ -3,7 +3,6 @@ package org.jrawio.controller.components;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.input.Dragboard;
@@ -40,14 +39,16 @@ public class JrawioCanvas {
         shapeClipboard = ShapeClipboard.getInstance();
 
         // 设置canvasPane的大小
-        double paneWidth = gridCanvas.getWidth() + 500;
-        double paneHeight = gridCanvas.getHeight() + 500;
+        double paneWidth = 1200; // 设置更大的画布区域
+        double paneHeight = 800;
         canvasPane.setPrefWidth(paneWidth);
         canvasPane.setPrefHeight(paneHeight);
 
-        // 让gridCanvas居中
-        gridCanvas.setLayoutX((paneWidth - gridCanvas.getWidth()) / 2);
-        gridCanvas.setLayoutY((paneHeight - gridCanvas.getHeight()) / 2);
+        // 调整gridCanvas大小以覆盖整个区域
+        gridCanvas.setWidth(paneWidth);
+        gridCanvas.setHeight(paneHeight);
+        gridCanvas.setLayoutX(0);
+        gridCanvas.setLayoutY(0);
 
         // 让gridCanvas不响应鼠标事件
         gridCanvas.setMouseTransparent(true);
@@ -72,29 +73,31 @@ public class JrawioCanvas {
 
         GraphicsContext gc = gridCanvas.getGraphicsContext2D();
 
+        // 清除画布
+        gc.clearRect(0, 0, width, height);
+
         // 填充白色背景
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, width, height);
 
+        // 设置网格线样式
         gc.setStroke(Color.LIGHTGRAY);
-        gc.setLineWidth(1);
+        gc.setLineWidth(0.5);
 
-        // 画竖线
+        // 画竖线 - 覆盖整个宽度
         for (double x = 0; x <= width; x += gridSize) {
             gc.strokeLine(x, 0, x, height);
         }
-        // 画横线
+
+        // 画横线 - 覆盖整个高度
         for (double y = 0; y <= height; y += gridSize) {
             gc.strokeLine(0, y, width, y);
         }
 
-        // 添加阴影效果
-        DropShadow dropShadow = new DropShadow();
-        dropShadow.setRadius(20);
-        dropShadow.setOffsetX(5);
-        dropShadow.setOffsetY(5);
-        dropShadow.setColor(Color.rgb(50, 50, 50, 0.4));
-        gridCanvas.setEffect(dropShadow);
+        // 添加边框
+        gc.setStroke(Color.GRAY);
+        gc.setLineWidth(1);
+        gc.strokeRect(0, 0, width, height);
     }
 
     /**
@@ -489,8 +492,8 @@ public class JrawioCanvas {
      */
     private void pasteAtCenter() {
         // 计算画布中心位置
-        double centerX = canvasPane.getWidth() / 2;
-        double centerY = canvasPane.getHeight() / 2;
+        double centerX = gridCanvas.getWidth() / 2;
+        double centerY = gridCanvas.getHeight() / 2;
         Point2D centerPosition = new Point2D(centerX, centerY);
 
         // 获取剪贴板实例
