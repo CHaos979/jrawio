@@ -15,7 +15,9 @@ import org.jrawio.controller.components.RightPanel;
 import org.jrawio.controller.components.ShapeClipboard;
 import org.jrawio.controller.shape.Shape.ShapeStateMachine.InteractionState;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.Data;
 import lombok.Getter;
@@ -814,5 +816,136 @@ public abstract class Shape extends Canvas {
     protected void removeConnectedArrows() {
         // 默认实现：不做任何处理
         // BlockShape 和 LineShape 子类会重写此方法
+    }
+
+    /**
+     * 获取该Shape对应的所有控制组件
+     * @return 控制组件列表
+     */
+    public List<javafx.scene.Node> getControlComponents() {
+        List<javafx.scene.Node> components = new ArrayList<>();
+        
+        // 添加基础控制组件
+        components.addAll(createBasicControls());
+        
+        // 添加形状特定的控制组件（可由子类扩展）
+        components.addAll(createShapeSpecificControls());
+        
+        return components;
+    }
+
+    /**
+     * 创建基础控制组件（文本、宽度、高度）
+     * 所有Shape都有的基础属性控件
+     */
+    protected List<javafx.scene.Node> createBasicControls() {
+        List<javafx.scene.Node> controls = new ArrayList<>();
+        
+        // 文本控制组件
+        controls.addAll(createTextControl());
+        
+        // 尺寸控制组件
+        controls.addAll(createSizeControls());
+        
+        return controls;
+    }
+
+    /**
+     * 创建文本控制组件
+     */
+    private List<javafx.scene.Node> createTextControl() {
+        List<javafx.scene.Node> textControls = new ArrayList<>();
+        
+        javafx.scene.control.Label textLabel = new javafx.scene.control.Label("文本：");
+        javafx.scene.control.TextField textInput = new javafx.scene.control.TextField(getText());
+        textInput.setPrefWidth(120);
+        
+        // 设置事件处理器
+        textInput.setOnAction(e -> setText(textInput.getText()));
+        textInput.focusedProperty().addListener((obs, oldV, newV) -> {
+            if (!newV) {
+                setText(textInput.getText());
+            }
+        });
+        
+        textControls.add(textLabel);
+        textControls.add(textInput);
+        
+        return textControls;
+    }
+
+    /**
+     * 创建尺寸控制组件（宽度和高度）
+     * 所有Shape都有的基础属性控件
+     */
+    private List<javafx.scene.Node> createSizeControls() {
+        List<javafx.scene.Node> sizeControls = new ArrayList<>();
+        
+        // 宽度控制
+        javafx.scene.control.Label widthLabel = new javafx.scene.control.Label("宽度：");
+        javafx.scene.control.TextField widthInput = new javafx.scene.control.TextField(String.valueOf((int) getWidth()));
+        widthInput.setPrefWidth(80);
+        
+        widthInput.setOnAction(e -> updateWidth(widthInput));
+        widthInput.focusedProperty().addListener((obs, oldV, newV) -> {
+            if (!newV) {
+                updateWidth(widthInput);
+            }
+        });
+        
+        // 高度控制
+        javafx.scene.control.Label heightLabel = new javafx.scene.control.Label("高度：");
+        javafx.scene.control.TextField heightInput = new javafx.scene.control.TextField(String.valueOf((int) getHeight()));
+        heightInput.setPrefWidth(80);
+        
+        heightInput.setOnAction(e -> updateHeight(heightInput));
+        heightInput.focusedProperty().addListener((obs, oldV, newV) -> {
+            if (!newV) {
+                updateHeight(heightInput);
+            }
+        });
+        
+        sizeControls.add(widthLabel);
+        sizeControls.add(widthInput);
+        sizeControls.add(heightLabel);
+        sizeControls.add(heightInput);
+        
+        return sizeControls;
+    }
+
+    /**
+     * 更新宽度
+     */
+    private void updateWidth(javafx.scene.control.TextField widthInput) {
+        try {
+            double width = Double.parseDouble(widthInput.getText());
+            setShapeWidth(width);
+        } catch (NumberFormatException ex) {
+            // 输入无效时恢复原值
+            widthInput.setText(String.valueOf((int) getWidth()));
+        }
+    }
+
+    /**
+     * 更新高度
+     */
+    private void updateHeight(javafx.scene.control.TextField heightInput) {
+        try {
+            double height = Double.parseDouble(heightInput.getText());
+            setShapeHeight(height);
+        } catch (NumberFormatException ex) {
+            // 输入无效时恢复原值
+            heightInput.setText(String.valueOf((int) getHeight()));
+        }
+    }
+
+    /**
+     * 创建形状特定的控制组件
+     * 子类可以重写此方法来添加特定的控制组件
+     * 例如：LineShape可能需要线条样式控制，ArrowShape可能需要箭头样式控制等
+     */
+    protected List<javafx.scene.Node> createShapeSpecificControls() {
+        // 默认实现：不添加特定控制组件
+        return new ArrayList<>();
     }
 }
