@@ -94,10 +94,9 @@ public class ShapeClipboard {
                 copiedShape.setLayoutX(originalShape.getLayoutX() + offsetX);
                 copiedShape.setLayoutY(originalShape.getLayoutY() + offsetY);
 
-                pastedShapes.add(copiedShape);
-            } catch (Exception e) {
+                pastedShapes.add(copiedShape);            } catch (Exception e) {
                 // 如果某个图形拷贝失败，跳过并继续处理其他图形
-                System.err.println("拷贝图形失败: " + e.getMessage());
+                System.err.println("Failed to copy shape: " + e.getMessage());
             }
         }
 

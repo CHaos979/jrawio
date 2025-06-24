@@ -716,11 +716,53 @@ public abstract class BlockShape extends Shape {
      */
     protected static class SnapTargetResult {
         public final BlockShape targetShape;
-        public final Point2D snapPoint;
-
-        public SnapTargetResult(BlockShape targetShape, Point2D snapPoint) {
+        public final Point2D snapPoint;        public SnapTargetResult(BlockShape targetShape, Point2D snapPoint) {
             this.targetShape = targetShape;
             this.snapPoint = snapPoint;
         }
+    }
+
+    /**
+     * 重写移除连接箭头的方法
+     * 移除所有连接到此BlockShape的箭头
+     */
+    @Override
+    protected void removeConnectedArrows() {
+        // 获取父容器用于移除箭头
+        Pane container = ArrowCreationManager.getShapeContainer(this);
+
+        // 创建拷贝以避免并发修改异常
+        Set<LineShape> startLinesCopy = new HashSet<>(LineStart);
+        Set<LineShape> endLinesCopy = new HashSet<>(LineEnd);
+
+        // 移除从此形状开始的箭头
+        for (LineShape line : startLinesCopy) {
+            if (line instanceof ArrowShape) {
+                // 断开连接
+                line.disconnectAll();
+                // 从画布中移除
+                if (container != null) {
+                    container.getChildren().remove(line);
+                }
+                System.out.println("Removed arrow starting from this shape");
+            }
+        }
+
+        // 移除连接到此形状的箭头
+        for (LineShape line : endLinesCopy) {
+            if (line instanceof ArrowShape) {
+                // 断开连接
+                line.disconnectAll();
+                // 从画布中移除
+                if (container != null) {
+                    container.getChildren().remove(line);
+                }
+                System.out.println("Removed arrow ending at this shape");
+            }
+        }
+
+        // 清空连接集合
+        LineStart.clear();
+        LineEnd.clear();
     }
 }

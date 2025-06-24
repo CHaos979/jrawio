@@ -620,4 +620,13 @@ public abstract class LineShape extends Shape {
     protected void setEndShapeInternal(BlockShape end) {
         this.end = end;
     }
+
+    /**
+     * 重写移除连接箭头的方法
+     * LineShape删除时断开所有连接
+     */
+    @Override
+    protected void removeConnectedArrows() {
+        disconnectAll();
+    }
 }
