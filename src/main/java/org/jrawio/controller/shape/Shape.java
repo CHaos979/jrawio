@@ -364,6 +364,11 @@ public abstract class Shape extends Canvas {
         // 标准的释放逻辑
         if (stateMachine.getCurrentState() == ShapeStateMachine.InteractionState.DRAGGING) {
             setCursor(Cursor.HAND);
+            // 拖动结束后，通知右侧面板更新位置信息
+            RightPanel rightPanel = RightPanel.getInstance();
+            if (rightPanel != null) {
+                rightPanel.onShapeSelectionChanged(selectedShapes);
+            }
         }
 
         // Hook: 让子类进行额外的释放后处理
@@ -948,7 +953,91 @@ public abstract class Shape extends Canvas {
      * 例如：LineShape可能需要线条样式控制，ArrowShape可能需要箭头样式控制等
      */
     protected List<javafx.scene.Node> createShapeSpecificControls() {
-        // 默认实现：不添加特定控制组件
-        return new ArrayList<>();
+        List<javafx.scene.Node> controls = new ArrayList<>();
+
+        // 添加位置控制组件
+        controls.addAll(createPositionControls());
+
+        return controls;
+    }
+
+    /**
+     * 创建位置控制组件（X和Y坐标）
+     */
+    private List<javafx.scene.Node> createPositionControls() {
+        List<javafx.scene.Node> positionControls = new ArrayList<>();
+
+        // X坐标控制
+        javafx.scene.control.Label xLabel = new javafx.scene.control.Label("X坐标：");
+        javafx.scene.control.TextField xInput = new javafx.scene.control.TextField(
+                String.valueOf((int) getLayoutX()));
+        xInput.setPrefWidth(80);
+
+        xInput.setOnAction(e -> updatePositionX(xInput));
+        xInput.focusedProperty().addListener((obs, oldV, newV) -> {
+            if (!newV) {
+                updatePositionX(xInput);
+            }
+        });
+
+        // Y坐标控制
+        javafx.scene.control.Label yLabel = new javafx.scene.control.Label("Y坐标：");
+        javafx.scene.control.TextField yInput = new javafx.scene.control.TextField(
+                String.valueOf((int) getLayoutY()));
+        yInput.setPrefWidth(80);
+
+        yInput.setOnAction(e -> updatePositionY(yInput));
+        yInput.focusedProperty().addListener((obs, oldV, newV) -> {
+            if (!newV) {
+                updatePositionY(yInput);
+            }
+        });
+
+        positionControls.add(xLabel);
+        positionControls.add(xInput);
+        positionControls.add(yLabel);
+        positionControls.add(yInput);
+
+        return positionControls;
+    }
+
+    /**
+     * 更新X坐标
+     */
+    private void updatePositionX(javafx.scene.control.TextField xInput) {
+        try {
+            double x = Double.parseDouble(xInput.getText());
+            setLayoutX(x);
+            // 触发位置变化回调
+            onPositionChanged(0, 0);
+            // 通知右侧面板更新
+            RightPanel rightPanel = RightPanel.getInstance();
+            if (rightPanel != null) {
+                rightPanel.onShapeSelectionChanged(selectedShapes);
+            }
+        } catch (NumberFormatException ex) {
+            // 输入无效时恢复原值
+            xInput.setText(String.valueOf((int) getLayoutX()));
+        }
+    }
+
+    /**
+     * 更新Y坐标
+     */
+    private void updatePositionY(javafx.scene.control.TextField yInput) {
+        try {
+            double y = Double.parseDouble(yInput.getText());
+            setLayoutY(y);
+            // 触发位置变化回调
+            onPositionChanged(0, 0);
+            // 通知右侧面板更新
+            RightPanel rightPanel = RightPanel.getInstance();
+            if (rightPanel != null) {
+                rightPanel.onShapeSelectionChanged(selectedShapes);
+            }
+        } catch (NumberFormatException ex) {
+            // 输入无效时恢复原值
+            yInput.setText(String.valueOf((int) getLayoutY()));
+        }
     }
 }

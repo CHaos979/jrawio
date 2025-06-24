@@ -1,6 +1,5 @@
 package org.jrawio.controller.shape;
 
-import lombok.Getter;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.GraphicsContext;
@@ -10,12 +9,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.crypto.interfaces.PBEKey;
 
 import org.jrawio.controller.components.RightPanel;
 
@@ -828,5 +825,67 @@ public abstract class BlockShape extends Shape {
             // 重新绘制图形以应用新颜色
             draw();
         }
+    }
+
+    /**
+     * 重写创建形状特定的控制组件，添加颜色控制
+     */
+    @Override
+    protected List<javafx.scene.Node> createShapeSpecificControls() {
+        List<javafx.scene.Node> controls = new ArrayList<>();
+
+        // 先添加父类的控制组件（位置控制）
+        controls.addAll(super.createShapeSpecificControls());
+
+        // 添加颜色控制组件
+        controls.addAll(createColorControls());
+
+        return controls;
+    }
+
+    /**
+     * 创建颜色控制组件（填充色和边框色）
+     */
+    private List<javafx.scene.Node> createColorControls() {
+        List<javafx.scene.Node> colorControls = new ArrayList<>();
+
+        // 填充颜色控制
+        javafx.scene.control.Label fillColorLabel = new javafx.scene.control.Label("填充色：");
+        javafx.scene.control.ColorPicker fillColorPicker = new javafx.scene.control.ColorPicker();
+
+        // 设置当前填充颜色
+        if (fillColor != null && !fillColor.equals(Color.TRANSPARENT)) {
+            fillColorPicker.setValue(fillColor);
+        } else {
+            fillColorPicker.setValue(Color.WHITE); // 默认白色
+        }
+
+        fillColorPicker.setOnAction(e -> {
+            Color selectedColor = fillColorPicker.getValue();
+            setFillColor(selectedColor);
+        });
+
+        // 边框颜色控制
+        javafx.scene.control.Label strokeColorLabel = new javafx.scene.control.Label("边框色：");
+        javafx.scene.control.ColorPicker strokeColorPicker = new javafx.scene.control.ColorPicker();
+
+        // 设置当前边框颜色
+        if (strokeColor != null && !strokeColor.equals(Color.TRANSPARENT)) {
+            strokeColorPicker.setValue(strokeColor);
+        } else {
+            strokeColorPicker.setValue(Color.BLACK); // 默认黑色
+        }
+
+        strokeColorPicker.setOnAction(e -> {
+            Color selectedColor = strokeColorPicker.getValue();
+            setStrokeColor(selectedColor);
+        });
+
+        colorControls.add(fillColorLabel);
+        colorControls.add(fillColorPicker);
+        colorControls.add(strokeColorLabel);
+        colorControls.add(strokeColorPicker);
+
+        return colorControls;
     }
 }
