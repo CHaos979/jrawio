@@ -641,7 +641,7 @@ public abstract class Shape extends Canvas {
         }
 
         // 绘制调试信息（canvas边界和中心点）
-        drawDebugInfo(gc);
+        // drawDebugInfo(gc); // 调试绘制已禁用
     }
 
     /**
