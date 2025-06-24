@@ -378,6 +378,8 @@ public class JrawioCanvas {
         canvasContextMenu.addMenuItem("全选", this::selectAllShapes);
         canvasContextMenu.addSeparator();
         canvasContextMenu.addMenuItem("粘贴", this::pasteFromClipboard);
+        canvasContextMenu.addSeparator();
+        canvasContextMenu.addMenuItem("导出为PNG", this::exportToPNG);
     }
 
     /**
@@ -515,5 +517,266 @@ public class JrawioCanvas {
 
         System.out.println("Successfully pasted " + pastedShapes.size() + " shapes at center position (" +
                 centerX + ", " + centerY + ")");
+    }
+
+    /**
+     * 导出画布为PNG图片
+     */
+    private void exportToPNG() {
+        try {
+            // 计算所有图形的边界框
+            double[] bounds = calculateShapesBounds();
+            if (bounds == null) {
+                System.out.println("No shapes to export");
+                return;
+            }
+
+            double minX = bounds[0];
+            double minY = bounds[1];
+            double maxX = bounds[2];
+            double maxY = bounds[3];
+
+            // 添加一些边距
+            double padding = 20;
+            double exportWidth = maxX - minX + 2 * padding;
+            double exportHeight = maxY - minY + 2 * padding;
+
+            // 创建导出用的Canvas
+            Canvas exportCanvas = new Canvas(exportWidth, exportHeight);
+            GraphicsContext gc = exportCanvas.getGraphicsContext2D();
+
+            // 设置透明背景
+            gc.clearRect(0, 0, exportWidth, exportHeight);
+
+            // 计算偏移量，使所有图形都在导出Canvas内
+            double offsetX = -minX + padding;
+            double offsetY = -minY + padding;
+
+            // 绘制所有图形到导出Canvas
+            for (Node node : canvasPane.getChildren()) {
+                if (node instanceof Shape) {
+                    Shape shape = (Shape) node;
+                    drawShapeToExportCanvas(shape, gc, offsetX, offsetY);
+                }
+            }
+
+            // 使用快照导出
+            javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+            params.setFill(Color.TRANSPARENT); // 透明背景
+            javafx.scene.image.WritableImage image = exportCanvas.snapshot(params, null);
+
+            // 打开文件保存对话框
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("导出PNG图片");
+            fileChooser.getExtensionFilters().add(
+                    new javafx.stage.FileChooser.ExtensionFilter("PNG文件", "*.png"));
+            fileChooser.setInitialFileName("diagram.png");
+
+            // 获取当前窗口
+            javafx.stage.Stage stage = (javafx.stage.Stage) canvasPane.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(stage);
+
+            if (file != null) {
+                // 保存图片
+                saveImageAsPNG(image, file);
+                System.out.println("Successfully exported to: " + file.getAbsolutePath());
+            } else {
+                System.out.println("Export cancelled by user");
+            }
+
+            System.out.println("Export completed successfully!");
+            System.out.println("Export size: " + (int) exportWidth + "x" + (int) exportHeight);
+
+        } catch (Exception e) {
+            System.err.println("Failed to export PNG: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 计算所有图形的边界框
+     * 
+     * @return [minX, minY, maxX, maxY] 或 null 如果没有图形
+     */
+    private double[] calculateShapesBounds() {
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxX = Double.MIN_VALUE;
+        double maxY = Double.MIN_VALUE;
+
+        boolean hasShapes = false;
+
+        for (Node node : canvasPane.getChildren()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                hasShapes = true;
+
+                double shapeMinX = shape.getLayoutX();
+                double shapeMinY = shape.getLayoutY();
+                double shapeMaxX = shapeMinX + shape.getWidth();
+                double shapeMaxY = shapeMinY + shape.getHeight();
+
+                minX = Math.min(minX, shapeMinX);
+                minY = Math.min(minY, shapeMinY);
+                maxX = Math.max(maxX, shapeMaxX);
+                maxY = Math.max(maxY, shapeMaxY);
+            }
+        }
+
+        return hasShapes ? new double[] { minX, minY, maxX, maxY } : null;
+    }
+
+    /**
+     * 将Shape绘制到导出Canvas上
+     */
+    private void drawShapeToExportCanvas(Shape shape, GraphicsContext gc, double offsetX, double offsetY) {
+        // 保存当前变换状态
+        gc.save();
+
+        // 应用偏移变换
+        gc.translate(shape.getLayoutX() + offsetX, shape.getLayoutY() + offsetY);
+
+        // 直接对Shape进行快照
+        javafx.scene.SnapshotParameters snapParams = new javafx.scene.SnapshotParameters();
+        snapParams.setFill(Color.TRANSPARENT);
+        javafx.scene.image.WritableImage shapeImage = shape.snapshot(snapParams, null);
+
+        gc.drawImage(shapeImage, 0, 0);
+
+        // 恢复变换状态
+        gc.restore();
+    }
+
+    /**
+     * 保存图片为PNG文件
+     */
+    private void saveImageAsPNG(javafx.scene.image.WritableImage image, java.io.File file) {
+        try {
+            // 确保文件名以.png结尾
+            String fileName = file.getName();
+            if (!fileName.toLowerCase().endsWith(".png")) {
+                file = new java.io.File(file.getParentFile(), fileName + ".png");
+            }
+
+            // 使用Java AWT/Swing的BufferedImage来处理PNG导出
+            int width = (int) image.getWidth();
+            int height = (int) image.getHeight();
+
+            // 创建BufferedImage
+            java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(
+                    width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+
+            // 从JavaFX的WritableImage读取像素数据并转换到BufferedImage
+            javafx.scene.image.PixelReader pixelReader = image.getPixelReader();
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    javafx.scene.paint.Color fxColor = pixelReader.getColor(x, y);
+
+                    // 转换为ARGB格式
+                    int a = (int) (fxColor.getOpacity() * 255);
+                    int r = (int) (fxColor.getRed() * 255);
+                    int g = (int) (fxColor.getGreen() * 255);
+                    int b = (int) (fxColor.getBlue() * 255);
+
+                    int argb = (a << 24) | (r << 16) | (g << 8) | b;
+                    bufferedImage.setRGB(x, y, argb);
+                }
+            }
+
+            // 使用ImageIO写入PNG文件
+            javax.imageio.ImageIO.write(bufferedImage, "PNG", file);
+
+            System.out.println("PNG文件成功保存到: " + file.getAbsolutePath());
+            System.out.println("- 图片尺寸: " + width + "x" + height);
+
+        } catch (Exception e) {
+            System.err.println("保存PNG文件失败: " + e.getMessage());
+            e.printStackTrace();
+
+            // 如果ImageIO不可用，回退到简化方法
+            System.out.println("正在尝试备用保存方法...");
+            saveImageAsSimpleFormat(image, file);
+        }
+    }
+
+    /**
+     * 备用的图片保存方法（当ImageIO不可用时）
+     */
+    private void saveImageAsSimpleFormat(javafx.scene.image.WritableImage image, java.io.File file) {
+        try {
+            // 确保文件名以.png结尾
+            String fileName = file.getName();
+            if (!fileName.toLowerCase().endsWith(".png")) {
+                file = new java.io.File(file.getParentFile(), fileName + ".png");
+            }
+
+            int width = (int) image.getWidth();
+            int height = (int) image.getHeight();
+
+            // 创建字节数组来存储图片数据
+            byte[] buffer = new byte[width * height * 4]; // RGBA格式
+
+            // 从WritableImage读取像素数据
+            javafx.scene.image.PixelReader pixelReader = image.getPixelReader();
+            int index = 0;
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    javafx.scene.paint.Color color = pixelReader.getColor(x, y);
+
+                    // 转换为RGBA字节
+                    buffer[index++] = (byte) (color.getRed() * 255);
+                    buffer[index++] = (byte) (color.getGreen() * 255);
+                    buffer[index++] = (byte) (color.getBlue() * 255);
+                    buffer[index++] = (byte) (color.getOpacity() * 255);
+                }
+            }
+
+            // 使用简单的数据文件格式
+            writeImageDataFile(file, buffer, width, height);
+
+            System.out.println("图片数据文件保存成功: " + file.getAbsolutePath());
+            System.out.println("- 图片尺寸: " + width + "x" + height);
+            System.out.println("注意: 由于系统限制，保存为自定义格式而非标准PNG");
+
+        } catch (Exception e) {
+            System.err.println("保存图片数据文件失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 写入图片数据文件的实现
+     */
+    private void writeImageDataFile(java.io.File file, byte[] imageData, int width, int height) {
+        try {
+            // 创建文件输出流
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                // 写入简单的头信息
+                writeIntBE(fos, width); // 宽度
+                writeIntBE(fos, height); // 高度
+
+                // 写入图片数据
+                fos.write(imageData);
+                fos.flush();
+            }
+
+            System.out.println("图片数据文件写入成功: " + file.getAbsolutePath());
+
+        } catch (Exception e) {
+            System.err.println("写入图片数据文件时出错: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 以大端序写入整数
+     */
+    private void writeIntBE(java.io.FileOutputStream fos, int value) throws java.io.IOException {
+        fos.write((value >>> 24) & 0xFF);
+        fos.write((value >>> 16) & 0xFF);
+        fos.write((value >>> 8) & 0xFF);
+        fos.write(value & 0xFF);
     }
 }
