@@ -714,29 +714,6 @@ public abstract class Shape extends Canvas {
     }
 
     /**
-     * 创建当前Shape的拷贝
-     * 使用反射机制调用对应的拷贝构造方法
-     * 
-     * @return 当前Shape的拷贝实例
-     * @throws RuntimeException 如果拷贝失败
-     */
-    public Shape copy() {
-        try {
-            // 获取当前对象的具体类型
-            Class<?> shapeClass = this.getClass();
-
-            // 查找拷贝构造方法：接受同类型对象作为参数的构造方法
-            java.lang.reflect.Constructor<?> copyConstructor = shapeClass.getConstructor(shapeClass);
-
-            // 调用拷贝构造方法创建新实例
-            return (Shape) copyConstructor.newInstance(this);
-
-        } catch (Exception e) {
-            throw new RuntimeException("无法拷贝Shape对象: " + e.getMessage(), e);
-        }
-    }
-
-    /**
      * 初始化右键菜单
      */
     private void initializeContextMenu() {
@@ -778,9 +755,7 @@ public abstract class Shape extends Canvas {
     private void copyShape() {
         // 获取剪贴板实例
         ShapeClipboard clipboard = ShapeClipboard.getInstance();
-
-        // 复制当前图形到剪贴板
-        clipboard.copy(this, this.getShapeType());
+        clipboard.copy(new ShapeClipboard.ClipboardItem(this, getShapeType()));
     }
 
     /**

@@ -2,6 +2,7 @@ package org.jrawio.controller.components;
 
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeType;
+import org.jrawio.controller.shape.ShapeFactory;
 import javafx.geometry.Point2D;
 
 import lombok.Data;
@@ -9,7 +10,6 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 
 /**
  * 图形剪贴板类 - 单例模式
@@ -17,9 +17,6 @@ import java.util.Collections;
  */
 @ToString
 public class ShapeClipboard {
-    /** 单例实例 */
-    private static ShapeClipboard instance;
-
     /**
      * 剪贴板项目类 - 存储图形和对应的类型
      */
@@ -29,15 +26,8 @@ public class ShapeClipboard {
         private final ShapeType shapeType;
     }
 
-    /** 剪贴板中的图形项目列表 */
-    private final List<ClipboardItem> items;
-
-    /** 剪贴板中图形的中心点（所有图形位置的均值） */
-    private Point2D centerPoint;
-
-    private ShapeClipboard() {
-        this.items = new ArrayList<>();
-    }
+    /** 单例实例 */
+    private static ShapeClipboard instance;
 
     /**
      * 获取单例实例
@@ -51,52 +41,21 @@ public class ShapeClipboard {
         return instance;
     }
 
-    /**
-     * 复制图形到剪贴板
-     * 
-     * @param shape     要复制的图形
-     * @param shapeType 图形类型
-     */
-    public void copy(Shape shape, ShapeType shapeType) {
-        if (shape == null || shapeType == null) {
-            return;
-        }
+    /** 剪贴板中的图形项目列表 */
+    private final List<ClipboardItem> items;
 
-        // 清空剪贴板
-        clear();
-        // 添加图形的拷贝到剪贴板
-        Shape copiedShape = shape.copy();
-        items.add(new ClipboardItem(copiedShape, shapeType));
+    /** 剪贴板中图形的中心点（所有图形位置的均值） */
+    private Point2D centerPoint;
 
-        // 计算中心点
-        calculateCenterPoint();
+    private ShapeClipboard() {
+        this.items = new ArrayList<>();
     }
 
     /**
-     * 复制多个图形到剪贴板
-     * 
-     * @param shapeList  要复制的图形列表
-     * @param shapeTypes 对应的图形类型列表
+     * 复制图形
      */
-    public void copy(List<Shape> shapeList, List<ShapeType> shapeTypes) {
-        if (shapeList == null || shapeTypes == null ||
-                shapeList.isEmpty() || shapeList.size() != shapeTypes.size()) {
-            return;
-        }
-
-        // 清空剪贴板
-        clear();
-        // 添加所有图形的拷贝到剪贴板
-        for (int i = 0; i < shapeList.size(); i++) {
-            Shape shape = shapeList.get(i);
-            ShapeType shapeType = shapeTypes.get(i);
-            if (shape != null && shapeType != null) {
-                Shape copiedShape = shape.copy();
-                items.add(new ClipboardItem(copiedShape, shapeType));
-            }
-        }
-
-        // 计算中心点
+    public void copy(ClipboardItem item) {
+        items.add(item);
         calculateCenterPoint();
     }
 
@@ -104,19 +63,42 @@ public class ShapeClipboard {
      * 从剪贴板粘贴图形
      * 返回剪贴板中图形的新拷贝
      * 
+     * @param point 粘贴目标位置
      * @return 粘贴的图形列表
      */
-    public List<Shape> paste() {
-        if (items.isEmpty()) {
-            return Collections.emptyList();
+    public List<Shape> paste(Point2D point) {
+        if (items.isEmpty() || point == null) {
+            return new ArrayList<>();
         }
 
         List<Shape> pastedShapes = new ArrayList<>();
 
-        // 为剪贴板中的每个图形创建新的拷贝
+        // 计算位移量：目标位置与剪贴板中心点的差值
+        double offsetX = 0;
+        double offsetY = 0;
+        if (centerPoint != null) {
+            offsetX = point.getX() - centerPoint.getX();
+            offsetY = point.getY() - centerPoint.getY();
+        }
+
+        // 使用 ShapeFactory 创建每个图形的拷贝
         for (ClipboardItem item : items) {
-            Shape pastedShape = item.getShape().copy();
-            pastedShapes.add(pastedShape);
+            try {
+                Shape originalShape = item.getShape();
+                ShapeType shapeType = item.getShapeType();
+
+                // 使用工厂方法创建拷贝
+                Shape copiedShape = ShapeFactory.createShapeByCopy(shapeType, originalShape);
+
+                // 应用位移，将拷贝的图形移动到目标位置
+                copiedShape.setLayoutX(originalShape.getLayoutX() + offsetX);
+                copiedShape.setLayoutY(originalShape.getLayoutY() + offsetY);
+
+                pastedShapes.add(copiedShape);
+            } catch (Exception e) {
+                // 如果某个图形拷贝失败，跳过并继续处理其他图形
+                System.err.println("拷贝图形失败: " + e.getMessage());
+            }
         }
 
         return pastedShapes;

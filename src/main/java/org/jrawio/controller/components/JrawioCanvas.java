@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
+import javafx.geometry.Point2D;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeType;
 import org.jrawio.controller.shape.ShapeFactory;
@@ -25,7 +26,7 @@ public class JrawioCanvas {
     // 框选相关成员变量
     private Rectangle selectionRect = new Rectangle();
     private double startX, startY;
-    
+
     // 右键菜单
     private RightClickMenu canvasContextMenu;
 
@@ -95,39 +96,44 @@ public class JrawioCanvas {
         setupDragOver();
         setupDragDropped();
     }
-      /**
+
+    /**
      * 设置拖拽悬停事件
      */
     private void setupDragOver() {
         canvasPane.setOnDragOver(event -> {
             Dragboard db = event.getDragboard();
             // 检查是否有形状类型和大小信息
-            if (db.hasContent(DragDataFormats.SHAPE_TYPE_FORMAT) && 
-                db.hasContent(DragDataFormats.SHAPE_WIDTH_FORMAT) && 
-                db.hasContent(DragDataFormats.SHAPE_HEIGHT_FORMAT)) {
+            if (db.hasContent(DragDataFormats.SHAPE_TYPE_FORMAT) &&
+                    db.hasContent(DragDataFormats.SHAPE_WIDTH_FORMAT) &&
+                    db.hasContent(DragDataFormats.SHAPE_HEIGHT_FORMAT)) {
                 event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
         });
-    }    /**
+    }
+
+    /**
      * 设置拖拽放下事件
      */
     private void setupDragDropped() {
         canvasPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-            
+
             // 使用形状类型和大小信息创建形状
-            if (db.hasContent(DragDataFormats.SHAPE_TYPE_FORMAT) && 
-                db.hasContent(DragDataFormats.SHAPE_WIDTH_FORMAT) && 
-                db.hasContent(DragDataFormats.SHAPE_HEIGHT_FORMAT)) {
+            if (db.hasContent(DragDataFormats.SHAPE_TYPE_FORMAT) &&
+                    db.hasContent(DragDataFormats.SHAPE_WIDTH_FORMAT) &&
+                    db.hasContent(DragDataFormats.SHAPE_HEIGHT_FORMAT)) {
                 success = createShapeFromData(db, event.getX(), event.getY());
             }
-            
+
             event.setDropCompleted(success);
             event.consume();
         });
-    }    /**
+    }
+
+    /**
      * 使用形状类型和大小信息创建形状
      */
     private boolean createShapeFromData(Dragboard db, double x, double y) {
@@ -136,14 +142,14 @@ public class JrawioCanvas {
             ShapeType shapeType = (ShapeType) db.getContent(DragDataFormats.SHAPE_TYPE_FORMAT);
             Double width = (Double) db.getContent(DragDataFormats.SHAPE_WIDTH_FORMAT);
             Double height = (Double) db.getContent(DragDataFormats.SHAPE_HEIGHT_FORMAT);
-            
+
             if (shapeType == null || width == null || height == null) {
                 return false;
             }
-            
+
             // 使用ShapeFactory创建形状
             Shape shape = ShapeFactory.createShape(shapeType, width, height);
-            
+
             // 设置放置位置
             shape.setLayoutX(x - shape.getWidth() / 2);
             shape.setLayoutY(y - shape.getHeight() / 2);
@@ -248,19 +254,18 @@ public class JrawioCanvas {
     private void initializeContextMenu() {
         // 创建菜单项配置列表
         List<RightClickMenu.MenuItemConfig> menuItems = Arrays.asList(
-            // 全选菜单项
-            RightClickMenu.menuItem("全选", this::selectAllShapes),
-            
-            // 分隔符
-            RightClickMenu.separator(),
-            
-            // 粘贴菜单项
-            RightClickMenu.menuItem("粘贴", this::pasteFromClipboard)
-        );
-        
+                // 全选菜单项
+                RightClickMenu.menuItem("全选", this::selectAllShapes),
+
+                // 分隔符
+                RightClickMenu.separator(),
+
+                // 粘贴菜单项
+                RightClickMenu.menuItem("粘贴", this::pasteFromClipboard));
+
         // 创建右键菜单
         canvasContextMenu = new RightClickMenu(canvasPane, menuItems);
-        
+
         // 设置鼠标事件处理
         setupCanvasMouseEvents();
     }
@@ -280,7 +285,7 @@ public class JrawioCanvas {
         if (canvasContextMenu.isShowing()) {
             canvasContextMenu.hide();
         }
-        
+
         // 只响应鼠标左键且点击目标是画布本身（不是拖拽Shape）
         if (event.isPrimaryButtonDown() && event.getTarget() == canvasPane) {
             startSelectionBox(event.getX(), event.getY());
@@ -299,9 +304,9 @@ public class JrawioCanvas {
         selectionRect.setHeight(0);
         selectionRect.setVisible(true);
     }
-    
+
     // 右键菜单操作方法
-    
+
     /**
      * 全选功能实现
      */
@@ -313,12 +318,35 @@ public class JrawioCanvas {
             }
         }
     }
-    
+
     /**
      * 粘贴功能实现
      */
     private void pasteFromClipboard() {
-        // TODO: 实现粘贴功能
-        System.out.println("粘贴功能待实现");
+        // 获取右键点击位置
+        Point2D clickPosition = canvasContextMenu.getLastClickPosition();
+        if (clickPosition == null) {
+            System.out.println("No right-click position recorded");
+            return;
+        }
+
+        // 获取剪贴板实例
+        ShapeClipboard clipboard = ShapeClipboard.getInstance();
+
+        // 从剪贴板粘贴图形
+        List<Shape> pastedShapes = clipboard.paste(clickPosition);
+
+        if (pastedShapes.isEmpty()) {
+            System.out.println("Clipboard is empty or paste failed");
+            return;
+        }
+
+        // 将粘贴的图形添加到画布
+        for (Shape shape : pastedShapes) {
+            canvasPane.getChildren().add(shape);
+        }
+
+        System.out.println("Successfully pasted " + pastedShapes.size() + " shapes at position (" +
+                clickPosition.getX() + ", " + clickPosition.getY() + ")");
     }
 }
