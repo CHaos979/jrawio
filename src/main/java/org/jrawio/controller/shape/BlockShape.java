@@ -471,27 +471,42 @@ public abstract class BlockShape extends Shape {
 
         double snapRadius = 20.0; // 吸附半径，可以根据需要调整
         SnapTargetResult nearestTarget = null;
-        double minDistance = Double.MAX_VALUE;
+        double minDistance = Double.MAX_VALUE; // 第一步：遍历容器中的所有子节点，找到最近的图形
+        BlockShape nearestShape = null;
+        double minShapeDistance = Double.MAX_VALUE;
 
-        // 遍历容器中的所有子节点
         for (javafx.scene.Node node : container.getChildren()) {
             // 只处理BlockShape类型的节点，且不是当前形状本身
             if (node instanceof BlockShape && node != this) {
-                BlockShape targetShape = (BlockShape) node; // 获取目标形状的所有可吸附点
-                List<Point2D> snapPoints = targetShape.getAllSnapPoints();
+                BlockShape targetShape = (BlockShape) node;
 
-                // 遍历所有吸附点，找到最近的点
-                for (Point2D snapPoint : snapPoints) {
-                    // 将形状本地坐标转换回容器坐标
-                    Point2D containerSnapPoint = targetShape.localToParent(snapPoint);
+                // 计算鼠标点到图形中心的距离作为初步筛选
+                double shapeCenterX = targetShape.getLayoutX() + targetShape.getWidth() / 2;
+                double shapeCenterY = targetShape.getLayoutY() + targetShape.getHeight() / 2;
+                Point2D shapeCenter = new Point2D(shapeCenterX, shapeCenterY);
 
-                    // 计算距离
-                    double distance = mousePoint.distance(containerSnapPoint);
+                double distanceToShape = mousePoint.distance(shapeCenter);
+                if (distanceToShape < minShapeDistance) {
+                    minShapeDistance = distanceToShape;
+                    nearestShape = targetShape;
+                }
+            }
+        }
 
-                    if (distance <= snapRadius && distance < minDistance) {
-                        minDistance = distance;
-                        nearestTarget = new SnapTargetResult(targetShape, containerSnapPoint);
-                    }
+        // 第二步：如果找到最近的图形，则从该图形中找最近的吸附点
+        if (nearestShape != null) {
+            List<Point2D> snapPoints = nearestShape.getAllSnapPoints();
+
+            for (Point2D snapPoint : snapPoints) {
+                // 将形状本地坐标转换回容器坐标
+                Point2D containerSnapPoint = nearestShape.localToParent(snapPoint);
+
+                // 计算距离
+                double distance = mousePoint.distance(containerSnapPoint);
+
+                if (distance <= snapRadius && distance < minDistance) {
+                    minDistance = distance;
+                    nearestTarget = new SnapTargetResult(nearestShape, containerSnapPoint);
                 }
             }
         }
