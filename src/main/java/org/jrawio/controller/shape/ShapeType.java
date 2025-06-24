@@ -6,6 +6,7 @@ package org.jrawio.controller.shape;
 public enum ShapeType {
     OVAL("circle"),
     RECTANGLE("rectangle"),
+    DIAMOND("diamond"),
     ARROW("arrow");
 
     private final String identifier;

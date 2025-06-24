@@ -21,6 +21,8 @@ public class ShapeFactory {
                 return new OvalShape(width, height);
             case RECTANGLE:
                 return new RectangleShape(width, height);
+            case DIAMOND:
+                return new DiamondShape(width, height);
             case ARROW:
                 return new ArrowShape(width, height);
             default:
@@ -46,6 +48,8 @@ public class ShapeFactory {
                 return new OvalShape((OvalShape) sourceShape);
             case RECTANGLE:
                 return new RectangleShape((RectangleShape) sourceShape);
+            case DIAMOND:
+                return new DiamondShape((DiamondShape) sourceShape);
             case ARROW:
                 return new ArrowShape((ArrowShape) sourceShape);
             default:
