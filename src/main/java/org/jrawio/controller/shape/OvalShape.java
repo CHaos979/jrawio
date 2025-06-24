@@ -1,7 +1,6 @@
 package org.jrawio.controller.shape;
 
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 import javafx.geometry.Point2D;
 import java.util.List;
 
@@ -26,11 +25,11 @@ public class OvalShape extends BlockShape {
 
     @Override
     public void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
-        // 设置边框样式
-        gc.setStroke(Color.BLACK);
+        // 设置线条宽度
         gc.setLineWidth(1);
 
-        // 绘制椭圆/圆形边框（透明背景）
+        // 绘制椭圆/圆形（填充背景和边框）
+        gc.fillOval(x, y, width, height);
         gc.strokeOval(x, y, width, height);
     }
 

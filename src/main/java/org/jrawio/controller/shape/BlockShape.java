@@ -28,7 +28,7 @@ public abstract class BlockShape extends Shape {
     private Set<LineShape> LineEnd = new HashSet<>();
 
     /** 形状颜色属性 */
-    private Color fillColor = Color.WHITE; // 默认填充颜色为白色
+    private Color fillColor; // 默认填充为透明
     private Color strokeColor = Color.BLACK; // 默认边框颜色为黑色
 
     /**
@@ -419,6 +419,10 @@ public abstract class BlockShape extends Shape {
         double y = drawingArea[1];
         double shapeWidth = drawingArea[2];
         double shapeHeight = drawingArea[3];
+
+        // 设置图形绘制颜色，处理NULL情况为透明色
+        gc.setFill(fillColor != null ? fillColor : Color.TRANSPARENT);
+        gc.setStroke(strokeColor != null ? strokeColor : Color.TRANSPARENT);
 
         // 调用子类实现的图形绘制方法
         drawShape(gc, x, y, shapeWidth, shapeHeight);
