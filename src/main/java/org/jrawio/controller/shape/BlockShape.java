@@ -1,5 +1,6 @@
 package org.jrawio.controller.shape;
 
+import lombok.Getter;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.canvas.GraphicsContext;
@@ -25,6 +26,10 @@ public abstract class BlockShape extends Shape {
 
     private Set<LineShape> LineStart = new HashSet<>();
     private Set<LineShape> LineEnd = new HashSet<>();
+
+    /** 形状颜色属性 */
+    private Color fillColor = Color.WHITE; // 默认填充颜色为白色
+    private Color strokeColor = Color.BLACK; // 默认边框颜色为黑色
 
     /**
      * 构造函数
@@ -52,6 +57,10 @@ public abstract class BlockShape extends Shape {
         // 注意：不复制连接线集合，新对象应该没有连接
         this.LineStart = new HashSet<>();
         this.LineEnd = new HashSet<>();
+
+        // 复制颜色属性
+        this.fillColor = source.fillColor;
+        this.strokeColor = source.strokeColor;
 
         // 不复制箭头创建状态，新对象应该是干净状态
         this.arrowStartPoint = null;
@@ -784,5 +793,31 @@ public abstract class BlockShape extends Shape {
         // 清空连接集合
         LineStart.clear();
         LineEnd.clear();
+    }
+
+    /**
+     * 设置填充颜色
+     * 
+     * @param fillColor 填充颜色
+     */
+    public void setFillColor(Color fillColor) {
+        if (fillColor != null) {
+            this.fillColor = fillColor;
+            // 重新绘制图形以应用新颜色
+            draw();
+        }
+    }
+
+    /**
+     * 设置边框颜色
+     * 
+     * @param strokeColor 边框颜色
+     */
+    public void setStrokeColor(Color strokeColor) {
+        if (strokeColor != null) {
+            this.strokeColor = strokeColor;
+            // 重新绘制图形以应用新颜色
+            draw();
+        }
     }
 }
