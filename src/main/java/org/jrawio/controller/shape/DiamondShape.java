@@ -26,8 +26,6 @@ public class DiamondShape extends BlockShape {
 
     @Override
     public void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
-        // 设置填充颜色为白色
-        gc.setFill(Color.WHITE);
 
         // 设置边框样式
         gc.setStroke(Color.BLACK);
@@ -52,10 +50,7 @@ public class DiamondShape extends BlockShape {
                 centerY // 左顶点
         };
 
-        // 先填充棱形
-        gc.fillPolygon(xPoints, yPoints, 4);
-
-        // 再绘制边框
+        // 绘制棱形边框（透明背景）
         gc.strokePolygon(xPoints, yPoints, 4);
     }
 

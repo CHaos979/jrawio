@@ -26,17 +26,11 @@ public class RectangleShape extends BlockShape {
 
     @Override
     public void drawShape(GraphicsContext gc, double x, double y, double width, double height) {
-        // 设置填充颜色为白色
-        gc.setFill(Color.WHITE);
-
         // 设置边框样式
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
 
-        // 先填充矩形
-        gc.fillRect(x, y, width, height);
-
-        // 再绘制边框
+        // 绘制矩形边框（透明背景）
         gc.strokeRect(x, y, width, height);
     }
 
