@@ -130,28 +130,29 @@ public class ArrowShape extends LineShape {
     @Override
     protected List<javafx.scene.Node> createShapeSpecificControls() {
         List<javafx.scene.Node> controls = new ArrayList<>();
-        
+
         // 添加箭头样式控制
         javafx.scene.control.Label arrowStyleLabel = new javafx.scene.control.Label("箭头样式：");
         javafx.scene.control.ComboBox<String> arrowStyleCombo = new javafx.scene.control.ComboBox<>();
         arrowStyleCombo.getItems().addAll("实心", "空心", "双向");
         arrowStyleCombo.setValue("实心"); // 默认值
         arrowStyleCombo.setPrefWidth(100);
-        
+
         // 添加线条样式控制
         javafx.scene.control.Label lineStyleLabel = new javafx.scene.control.Label("线条样式：");
         javafx.scene.control.CheckBox dashCheckBox = new javafx.scene.control.CheckBox("虚线");
         dashCheckBox.setSelected(false); // 默认实线
-        
+
         // 这里可以添加事件处理器来实际更新箭头的样式
-        // arrowStyleCombo.setOnAction(e -> updateArrowStyle(arrowStyleCombo.getValue()));
+        // arrowStyleCombo.setOnAction(e ->
+        // updateArrowStyle(arrowStyleCombo.getValue()));
         // dashCheckBox.setOnAction(e -> updateLineStyle(dashCheckBox.isSelected()));
-        
+
         controls.add(arrowStyleLabel);
         controls.add(arrowStyleCombo);
         controls.add(lineStyleLabel);
         controls.add(dashCheckBox);
-        
+
         return controls;
     }
 }

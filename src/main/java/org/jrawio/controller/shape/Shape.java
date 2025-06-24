@@ -820,17 +820,18 @@ public abstract class Shape extends Canvas {
 
     /**
      * 获取该Shape对应的所有控制组件
+     * 
      * @return 控制组件列表
      */
     public List<javafx.scene.Node> getControlComponents() {
         List<javafx.scene.Node> components = new ArrayList<>();
-        
+
         // 添加基础控制组件
         components.addAll(createBasicControls());
-        
+
         // 添加形状特定的控制组件（可由子类扩展）
         components.addAll(createShapeSpecificControls());
-        
+
         return components;
     }
 
@@ -840,13 +841,13 @@ public abstract class Shape extends Canvas {
      */
     protected List<javafx.scene.Node> createBasicControls() {
         List<javafx.scene.Node> controls = new ArrayList<>();
-        
+
         // 文本控制组件
         controls.addAll(createTextControl());
-        
+
         // 尺寸控制组件
         controls.addAll(createSizeControls());
-        
+
         return controls;
     }
 
@@ -855,11 +856,11 @@ public abstract class Shape extends Canvas {
      */
     private List<javafx.scene.Node> createTextControl() {
         List<javafx.scene.Node> textControls = new ArrayList<>();
-        
+
         javafx.scene.control.Label textLabel = new javafx.scene.control.Label("文本：");
         javafx.scene.control.TextField textInput = new javafx.scene.control.TextField(getText());
         textInput.setPrefWidth(120);
-        
+
         // 设置事件处理器
         textInput.setOnAction(e -> setText(textInput.getText()));
         textInput.focusedProperty().addListener((obs, oldV, newV) -> {
@@ -867,10 +868,10 @@ public abstract class Shape extends Canvas {
                 setText(textInput.getText());
             }
         });
-        
+
         textControls.add(textLabel);
         textControls.add(textInput);
-        
+
         return textControls;
     }
 
@@ -880,36 +881,38 @@ public abstract class Shape extends Canvas {
      */
     private List<javafx.scene.Node> createSizeControls() {
         List<javafx.scene.Node> sizeControls = new ArrayList<>();
-        
+
         // 宽度控制
         javafx.scene.control.Label widthLabel = new javafx.scene.control.Label("宽度：");
-        javafx.scene.control.TextField widthInput = new javafx.scene.control.TextField(String.valueOf((int) getWidth()));
+        javafx.scene.control.TextField widthInput = new javafx.scene.control.TextField(
+                String.valueOf((int) getWidth()));
         widthInput.setPrefWidth(80);
-        
+
         widthInput.setOnAction(e -> updateWidth(widthInput));
         widthInput.focusedProperty().addListener((obs, oldV, newV) -> {
             if (!newV) {
                 updateWidth(widthInput);
             }
         });
-        
+
         // 高度控制
         javafx.scene.control.Label heightLabel = new javafx.scene.control.Label("高度：");
-        javafx.scene.control.TextField heightInput = new javafx.scene.control.TextField(String.valueOf((int) getHeight()));
+        javafx.scene.control.TextField heightInput = new javafx.scene.control.TextField(
+                String.valueOf((int) getHeight()));
         heightInput.setPrefWidth(80);
-        
+
         heightInput.setOnAction(e -> updateHeight(heightInput));
         heightInput.focusedProperty().addListener((obs, oldV, newV) -> {
             if (!newV) {
                 updateHeight(heightInput);
             }
         });
-        
+
         sizeControls.add(widthLabel);
         sizeControls.add(widthInput);
         sizeControls.add(heightLabel);
         sizeControls.add(heightInput);
-        
+
         return sizeControls;
     }
 
