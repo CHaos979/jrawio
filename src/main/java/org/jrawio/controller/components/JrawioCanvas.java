@@ -165,6 +165,7 @@ public class JrawioCanvas {
             shape.setLayoutX(x - shape.getWidth() / 2);
             shape.setLayoutY(y - shape.getHeight() / 2);
             canvasPane.getChildren().add(shape);
+            shape.draw();
             return true;
         } catch (Exception e) {
             System.err.println("创建形状失败: " + e.getMessage());

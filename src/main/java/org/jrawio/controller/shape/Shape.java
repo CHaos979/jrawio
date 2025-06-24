@@ -583,7 +583,7 @@ public abstract class Shape extends Canvas {
     /**
      * 绘制图形到画布
      */
-    protected void draw() {
+    public void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 

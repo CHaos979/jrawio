@@ -548,7 +548,7 @@ public abstract class LineShape extends Shape {
      * 绘制线形到画布
      */
     @Override
-    protected void draw() {
+    public void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 

@@ -56,6 +56,11 @@ public class ShapeButton implements Initializable {
         GraphicsContext gc = shapeCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, width, height);
 
+        // 设置绘制颜色：透明底色和黑线
+        gc.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        gc.setStroke(javafx.scene.paint.Color.BLACK);
+        gc.setLineWidth(1);
+
         // 使用对应的Shape类来绘制预览
         Shape previewShape = ShapeFactory.createShape(shapeType, previewWidth, previewHeight);
         previewShape.drawShape(gc, padding, padding, previewWidth, previewHeight);
@@ -79,6 +84,11 @@ public class ShapeButton implements Initializable {
 
         // 清除背景（透明）
         gc.clearRect(0, 0, imageWidth, imageHeight);
+
+        // 设置绘制颜色：透明底色和黑线
+        gc.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        gc.setStroke(javafx.scene.paint.Color.BLACK);
+        gc.setLineWidth(1);
 
         // 使用对应的Shape类来绘制预览
         Shape previewShape = ShapeFactory.createShape(shapeType, shapeWidth, shapeHeight);

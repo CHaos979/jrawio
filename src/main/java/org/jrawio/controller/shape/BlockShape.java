@@ -9,9 +9,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+
+import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.crypto.interfaces.PBEKey;
+
 import org.jrawio.controller.components.RightPanel;
 
 /**
@@ -28,7 +33,7 @@ public abstract class BlockShape extends Shape {
     private Set<LineShape> LineEnd = new HashSet<>();
 
     /** 形状颜色属性 */
-    private Color fillColor; // 默认填充为透明
+    private Color fillColor = Color.TRANSPARENT; // 默认填充为透明
     private Color strokeColor = Color.BLACK; // 默认边框颜色为黑色
 
     /**
@@ -403,7 +408,7 @@ public abstract class BlockShape extends Shape {
      * 重写绘制方法，添加箭头控制点的绘制
      */
     @Override
-    protected void draw() {
+    public void draw() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
 
