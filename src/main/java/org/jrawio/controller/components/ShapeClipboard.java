@@ -3,6 +3,9 @@ package org.jrawio.controller.components;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeType;
 import org.jrawio.controller.shape.ShapeFactory;
+import org.jrawio.controller.shape.OvalShape;
+import org.jrawio.controller.shape.RectangleShape;
+import org.jrawio.controller.shape.ArrowShape;
 import javafx.geometry.Point2D;
 
 import lombok.Data;
@@ -49,14 +52,46 @@ public class ShapeClipboard {
 
     private ShapeClipboard() {
         this.items = new ArrayList<>();
-    }
-
-    /**
+    }    /**
      * 复制图形
      */
     public void copy(ClipboardItem item) {
         items.add(item);
         calculateCenterPoint();
+    }    /**
+     * 复制多个图形
+     * 
+     * @param shapes 要复制的图形列表
+     */
+    public void copy(List<Shape> shapes) {
+        items.clear(); // 清空现有剪贴板内容
+        for (Shape shape : shapes) {
+            ShapeType shapeType = getShapeType(shape);
+            if (shapeType != null) {
+                items.add(new ClipboardItem(shape, shapeType));
+            } else {
+                System.out.println("Warning: Unable to determine shape type for shape: " + shape.getClass().getSimpleName());
+            }
+        }
+        calculateCenterPoint();
+        System.out.println("Copied " + items.size() + " shapes to clipboard");
+    }
+
+    /**
+     * 根据 Shape 实例确定其类型
+     * 
+     * @param shape Shape 实例
+     * @return 对应的 ShapeType，如果无法确定则返回 null
+     */
+    private ShapeType getShapeType(Shape shape) {
+        if (shape instanceof OvalShape) {
+            return ShapeType.OVAL;
+        } else if (shape instanceof RectangleShape) {
+            return ShapeType.RECTANGLE;
+        } else if (shape instanceof ArrowShape) {
+            return ShapeType.ARROW;
+        }
+        return null;
     }
 
     /**

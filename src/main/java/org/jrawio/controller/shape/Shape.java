@@ -18,12 +18,14 @@ import org.jrawio.controller.shape.Shape.ShapeStateMachine.InteractionState;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
+import lombok.Getter;
 
 public abstract class Shape extends Canvas {
     /** 是否被选中 */
     protected boolean selected = false;
 
     /** 被选中的所有图形 */
+    @Getter
     protected static final Set<Shape> selectedShapes = new HashSet<>();
 
     /** 文本内容 */
@@ -480,9 +482,7 @@ public abstract class Shape extends Canvas {
         }
 
         event.consume();
-    }
-
-    /**
+    }    /**
      * 设置图形选中状态
      * 
      * @param selected 是否选中
@@ -503,6 +503,15 @@ public abstract class Shape extends Canvas {
         if (rightPanel != null) {
             rightPanel.onShapeSelectionChanged(selectedShapes);
         }
+    }
+
+    /**
+     * 获取图形选中状态
+     * 
+     * @return 是否选中
+     */
+    public boolean isSelected() {
+        return selected;
     }
 
     /**
@@ -760,7 +769,7 @@ public abstract class Shape extends Canvas {
      * 删除Shape功能
      * 从画布移除并清理相关引用
      */
-    private void deleteShape() {
+    public void deleteShape() {
         try {
             // 1. 清理连接关系（子类实现具体逻辑）
             removeConnectedArrows();

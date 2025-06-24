@@ -9,12 +9,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.Node;
 import javafx.geometry.Point2D;
 import org.jrawio.controller.shape.Shape;
 import org.jrawio.controller.shape.ShapeType;
 import org.jrawio.controller.shape.ShapeFactory;
-import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 
 public class JrawioCanvas {
     @FXML
@@ -25,13 +26,17 @@ public class JrawioCanvas {
 
     // 框选相关成员变量
     private Rectangle selectionRect = new Rectangle();
-    private double startX, startY;
-
-    // 右键菜单
+    private double startX, startY; // 右键菜单
     private RightClickMenu canvasContextMenu;
+
+    // 剪贴板
+    private ShapeClipboard shapeClipboard;
 
     @FXML
     public void initialize() {
+        // 初始化剪贴板
+        shapeClipboard = ShapeClipboard.getInstance();
+
         // 设置canvasPane的大小
         double paneWidth = gridCanvas.getWidth() + 500;
         double paneHeight = gridCanvas.getHeight() + 500;
@@ -252,19 +257,8 @@ public class JrawioCanvas {
      * 初始化右键菜单
      */
     private void initializeContextMenu() {
-        // 创建菜单项配置列表
-        List<RightClickMenu.MenuItemConfig> menuItems = Arrays.asList(
-                // 全选菜单项
-                RightClickMenu.menuItem("全选", this::selectAllShapes),
-
-                // 分隔符
-                RightClickMenu.separator(),
-
-                // 粘贴菜单项
-                RightClickMenu.menuItem("粘贴", this::pasteFromClipboard));
-
-        // 创建右键菜单
-        canvasContextMenu = new RightClickMenu(canvasPane, menuItems);
+        // 创建右键菜单但不设置菜单项（动态创建）
+        canvasContextMenu = new RightClickMenu(canvasPane);
 
         // 设置鼠标事件处理
         setupCanvasMouseEvents();
@@ -284,6 +278,12 @@ public class JrawioCanvas {
         // 隐藏右键菜单（如果正在显示）
         if (canvasContextMenu.isShowing()) {
             canvasContextMenu.hide();
+        }
+
+        // 处理右键点击 - 动态创建菜单
+        if (event.isSecondaryButtonDown() && event.getTarget() == canvasPane) {
+            createDynamicContextMenu();
+            return;
         }
 
         // 只响应鼠标左键且点击目标是画布本身（不是拖拽Shape）
@@ -348,5 +348,94 @@ public class JrawioCanvas {
 
         System.out.println("Successfully pasted " + pastedShapes.size() + " shapes at position (" +
                 clickPosition.getX() + ", " + clickPosition.getY() + ")");
+    }
+
+    /**
+     * 动态创建右键菜单
+     */
+    private void createDynamicContextMenu() {
+        // 清空现有菜单项
+        canvasContextMenu.clearMenuItems();
+
+        // 检查是否有选中的图形
+        boolean hasSelectedShapes = hasSelectedShapes();
+
+        if (hasSelectedShapes) {
+            // 有选中图形时的菜单
+            canvasContextMenu.addMenuItem("复制", this::copySelectedShapes);
+            canvasContextMenu.addMenuItem("删除", this::deleteSelectedShapes);
+            canvasContextMenu.addSeparator();
+        }
+
+        // 通用菜单项
+        canvasContextMenu.addMenuItem("全选", this::selectAllShapes);
+        canvasContextMenu.addSeparator();
+        canvasContextMenu.addMenuItem("粘贴", this::pasteFromClipboard);
+    }
+
+    /**
+     * 检查是否有选中的图形
+     */
+    private boolean hasSelectedShapes() {
+        for (javafx.scene.Node node : canvasPane.getChildren()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                if (shape.isSelected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 复制选中的图形
+     */
+    private void copySelectedShapes() {
+        // 获取所有选中的图形
+        List<Shape> selectedShapes = new ArrayList<>();
+        for (Node node : canvasPane.getChildren()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                if (shape.isSelected()) {
+                    selectedShapes.add(shape);
+                }
+            }
+        }
+
+        if (!selectedShapes.isEmpty()) {
+            // 将选中的图形复制到剪贴板
+            shapeClipboard.copy(selectedShapes);
+            System.out.println("Copied " + selectedShapes.size() + " selected shapes to clipboard");
+        } else {
+            System.out.println("No shapes selected for copying");
+        }
+    }
+
+    /**
+     * 删除选中的图形
+     */
+    private void deleteSelectedShapes() {
+        // 获取所有选中的图形
+        List<Shape> shapesToDelete = new ArrayList<>();
+        for (Node node : canvasPane.getChildren()) {
+            if (node instanceof Shape) {
+                Shape shape = (Shape) node;
+                if (shape.isSelected()) {
+                    shapesToDelete.add(shape);
+                }
+            }
+        }
+
+        if (!shapesToDelete.isEmpty()) {
+            // 删除所有选中的图形
+            for (Shape shape : shapesToDelete) {
+                // 调用 Shape 的删除方法，会自动处理清理逻辑
+                shape.deleteShape();
+            }
+            System.out.println("Deleted " + shapesToDelete.size() + " selected shapes");
+        } else {
+            System.out.println("No shapes selected for deletion");
+        }
     }
 }
