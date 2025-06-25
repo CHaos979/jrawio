@@ -33,27 +33,36 @@ public class ShapeFactory {
     /**
      * 通过拷贝构造创建形状实例
      * 
-     * @param shapeType   形状类型枚举
      * @param sourceShape 源形状对象
      * @return 创建的形状拷贝实例
-     * @throws IllegalArgumentException 当形状类型不支持时抛出
+     * @throws IllegalArgumentException 当源形状为空时抛出
+     */
+    public static Shape createShapeByCopy(Shape sourceShape) {
+        if (sourceShape == null) {
+            throw new IllegalArgumentException("源形状对象不能为空");
+        }
+
+        return sourceShape.copy();
+    }
+
+    /**
+     * 通过拷贝构造创建形状实例（保留原有接口兼容性）
+     * 
+     * @param shapeType   形状类型枚举（用于验证类型一致性）
+     * @param sourceShape 源形状对象
+     * @return 创建的形状拷贝实例
+     * @throws IllegalArgumentException 当形状类型不匹配或源形状为空时抛出
      */
     public static Shape createShapeByCopy(ShapeType shapeType, Shape sourceShape) {
         if (sourceShape == null) {
             throw new IllegalArgumentException("源形状对象不能为空");
         }
 
-        switch (shapeType) {
-            case OVAL:
-                return new OvalShape((OvalShape) sourceShape);
-            case RECTANGLE:
-                return new RectangleShape((RectangleShape) sourceShape);
-            case DIAMOND:
-                return new DiamondShape((DiamondShape) sourceShape);
-            case ARROW:
-                return new ArrowShape((ArrowShape) sourceShape);
-            default:
-                throw new IllegalArgumentException("不支持的形状类型: " + shapeType);
+        // 验证形状类型是否匹配
+        if (sourceShape.getShapeType() != shapeType) {
+            throw new IllegalArgumentException("形状类型不匹配: 期望 " + shapeType + ", 实际 " + sourceShape.getShapeType());
         }
+
+        return sourceShape.copy();
     }
 }

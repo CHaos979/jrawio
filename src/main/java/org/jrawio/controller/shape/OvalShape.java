@@ -131,4 +131,14 @@ public class OvalShape extends BlockShape {
     public ShapeType getShapeType() {
         return ShapeType.OVAL;
     }
+
+    /**
+     * 创建当前OvalShape的拷贝
+     * 
+     * @return 当前OvalShape的拷贝实例
+     */
+    @Override
+    public Shape copy() {
+        return new OvalShape(this);
+    }
 }

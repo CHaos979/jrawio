@@ -586,6 +586,14 @@ public abstract class Shape extends Canvas {
     public abstract ShapeType getShapeType();
 
     /**
+     * 抽象方法：创建当前形状的拷贝
+     * 子类必须实现此方法来创建自身的副本
+     * 
+     * @return 当前形状的拷贝实例
+     */
+    public abstract Shape copy();
+
+    /**
      * 绘制图形到画布
      */
     public void draw() {

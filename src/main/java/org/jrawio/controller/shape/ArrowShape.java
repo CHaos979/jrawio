@@ -158,4 +158,14 @@ public class ArrowShape extends LineShape {
 
         return controls;
     }
+
+    /**
+     * 创建当前ArrowShape的拷贝
+     * 
+     * @return 当前ArrowShape的拷贝实例
+     */
+    @Override
+    public Shape copy() {
+        return new ArrowShape(this);
+    }
 }

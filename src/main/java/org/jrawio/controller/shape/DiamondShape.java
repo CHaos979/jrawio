@@ -147,4 +147,14 @@ public class DiamondShape extends BlockShape {
     public ShapeType getShapeType() {
         return ShapeType.DIAMOND;
     }
+
+    /**
+     * 创建当前DiamondShape的拷贝
+     * 
+     * @return 当前DiamondShape的拷贝实例
+     */
+    @Override
+    public Shape copy() {
+        return new DiamondShape(this);
+    }
 }
