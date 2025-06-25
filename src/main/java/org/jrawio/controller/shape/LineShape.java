@@ -5,6 +5,9 @@ import javafx.scene.paint.Color;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Cursor;
+import javafx.scene.control.Label;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.control.Spinner;
 import org.jrawio.controller.components.RightPanel;
 
 /**
@@ -22,6 +25,10 @@ public abstract class LineShape extends Shape {
     /** 控制点半径 */
     protected static final double CONTROL_POINT_SIZE = 6.0;
     private BlockShape start, end;
+
+    /** 线条样式属性 */
+    private Color lineColor = Color.BLACK; // 默认线条颜色为黑色
+    private double lineWidth = 1.0; // 默认线条粗细为2
 
     /** 线形控制点类型 */
     public enum LineControlPoint {
@@ -90,6 +97,10 @@ public abstract class LineShape extends Shape {
         // 复制LineShape特有属性
         this.startPoint = new Point2D(source.startPoint.getX(), source.startPoint.getY());
         this.endPoint = new Point2D(source.endPoint.getX(), source.endPoint.getY());
+
+        // 复制线条样式属性
+        this.lineColor = source.lineColor;
+        this.lineWidth = source.lineWidth;
 
         // 不复制连接状态，新对象应该没有连接
         this.start = null;
@@ -560,6 +571,10 @@ public abstract class LineShape extends Shape {
         double shapeWidth = drawingArea[2];
         double shapeHeight = drawingArea[3];
 
+        // 设置线条样式属性
+        gc.setStroke(lineColor != null ? lineColor : Color.BLACK);
+        gc.setLineWidth(lineWidth);
+
         // 调用子类实现的图形绘制方法
         drawShape(gc, x, y, shapeWidth, shapeHeight);
 
@@ -617,5 +632,110 @@ public abstract class LineShape extends Shape {
     @Override
     protected void removeConnectedArrows() {
         disconnectAll();
+    }
+
+    /**
+     * 设置线条颜色
+     * 
+     * @param lineColor 线条颜色
+     */
+    public void setLineColor(Color lineColor) {
+        if (lineColor != null) {
+            this.lineColor = lineColor;
+            // 重新绘制线条以应用新颜色
+            draw();
+        }
+    }
+
+    /**
+     * 获取线条颜色
+     * 
+     * @return 线条颜色
+     */
+    public Color getLineColor() {
+        return lineColor;
+    }
+
+    /**
+     * 设置线条粗细
+     * 
+     * @param lineWidth 线条粗细
+     */
+    public void setLineWidth(double lineWidth) {
+        if (lineWidth > 0) {
+            this.lineWidth = lineWidth;
+            // 重新绘制线条以应用新粗细
+            draw();
+        }
+    }
+
+    /**
+     * 获取线条粗细
+     * 
+     * @return 线条粗细
+     */
+    public double getLineWidth() {
+        return lineWidth;
+    }
+
+    /**
+     * 重写创建形状特定的控制组件，添加线条样式控制
+     */
+    @Override
+    protected java.util.List<javafx.scene.Node> createShapeSpecificControls() {
+        java.util.List<javafx.scene.Node> controls = new java.util.ArrayList<>();
+
+        // 先添加父类的控制组件（位置控制）
+        controls.addAll(super.createShapeSpecificControls());
+
+        // 添加线条样式控制组件
+        controls.addAll(createLineStyleControls());
+
+        return controls;
+    }
+
+    /**
+     * 创建线条样式控制组件（线条颜色和粗细）
+     */
+    private java.util.List<javafx.scene.Node> createLineStyleControls() {
+        java.util.List<javafx.scene.Node> styleControls = new java.util.ArrayList<>();
+
+        // 线条颜色控制
+        Label lineColorLabel = new Label("线条颜色：");
+        ColorPicker lineColorPicker = new ColorPicker();
+
+        // 设置当前线条颜色
+        if (lineColor != null) {
+            lineColorPicker.setValue(lineColor);
+        } else {
+            lineColorPicker.setValue(Color.BLACK); // 默认黑色
+        }
+
+        // 设置颜色选择器的事件处理
+        lineColorPicker.setOnAction(e -> {
+            Color selectedColor = lineColorPicker.getValue();
+            setLineColor(selectedColor);
+        });
+
+        // 线条粗细控制
+        Label lineWidthLabel = new Label("线条粗细：");
+        Spinner<Double> lineWidthSpinner = new Spinner<>(0.5, 10.0, lineWidth, 0.5);
+        lineWidthSpinner.setEditable(true);
+        lineWidthSpinner.setPrefWidth(80);
+
+        // 设置粗细调节器的事件处理
+        lineWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue != null && newValue > 0) {
+                setLineWidth(newValue);
+            }
+        });
+
+        // 添加控件到列表
+        styleControls.add(lineColorLabel);
+        styleControls.add(lineColorPicker);
+        styleControls.add(lineWidthLabel);
+        styleControls.add(lineWidthSpinner);
+
+        return styleControls;
     }
 }

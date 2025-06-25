@@ -65,10 +65,10 @@ public class ArrowShape extends LineShape {
             initializePoints(getWidth(), getHeight());
         }
 
-        // 设置绘制属性
-        gc.setStroke(Color.BLACK);
-        gc.setLineWidth(1);
-        gc.setFill(Color.BLACK);
+        // 设置绘制属性 - 使用父类的线条样式属性
+        gc.setStroke(getLineColor() != null ? getLineColor() : Color.BLACK);
+        gc.setLineWidth(getLineWidth());
+        gc.setFill(getLineColor() != null ? getLineColor() : Color.BLACK);
 
         // 计算实际的起始点和结束点坐标
         double actualStartX = x + (startPoint.getX() / getWidth()) * width;
@@ -130,6 +130,9 @@ public class ArrowShape extends LineShape {
     @Override
     protected List<javafx.scene.Node> createShapeSpecificControls() {
         List<javafx.scene.Node> controls = new ArrayList<>();
+
+        // 先添加父类LineShape的控制组件（线条颜色和粗细）
+        controls.addAll(super.createShapeSpecificControls());
 
         // 添加箭头样式控制
         javafx.scene.control.Label arrowStyleLabel = new javafx.scene.control.Label("箭头样式：");
