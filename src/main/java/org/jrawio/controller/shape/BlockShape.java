@@ -33,6 +33,10 @@ public abstract class BlockShape extends Shape {
     private Color fillColor = Color.TRANSPARENT; // 默认填充为透明
     private Color strokeColor = Color.BLACK; // 默认边框颜色为黑色
 
+    /** 可吸附点视觉显示相关字段 */
+    private List<javafx.scene.shape.Circle> snapPointIndicators = new ArrayList<>();
+    private SnapTargetResult currentSnapTarget = null;
+
     /**
      * 构造函数
      * 
@@ -262,13 +266,22 @@ public abstract class BlockShape extends Shape {
         }
 
         // 检查是否有可吸附的目标形状
-        Point2D snapPoint = findSnapTargetPoint(dragEndPoint, container);
-        if (snapPoint != null) {
+        SnapTargetResult snapResult = findSnapTarget(dragEndPoint, container);
+        Point2D snapPoint = null;
+
+        if (snapResult != null) {
+            snapPoint = snapResult.snapPoint;
             // 使用吸附点作为箭头结束点
             currentArrowEndPoint = snapPoint;
+
+            // 更新可吸附点的视觉显示
+            updateSnapPointVisuals(snapResult, container);
         } else {
             // 使用原始拖拽点
             currentArrowEndPoint = dragEndPoint;
+
+            // 清除可吸附点的视觉显示
+            clearSnapPointVisuals(container);
         }
 
         // 清除之前的临时箭头
@@ -354,19 +367,26 @@ public abstract class BlockShape extends Shape {
     /**
      * 重置箭头创建状态
      */
-    protected void resetArrowCreationState() { // 移除临时箭头
+    protected void resetArrowCreationState() {
+        // 获取容器
+        Pane container = ArrowCreationManager.getShapeContainer(this);
+
+        // 移除临时箭头
         if (temporaryArrow != null) {
-            Pane container = ArrowCreationManager.getShapeContainer(this);
             if (container != null) {
                 container.getChildren().remove(temporaryArrow);
             }
         }
+
+        // 清除可吸附点的视觉显示
+        clearSnapPointVisuals(container);
 
         // 重置状态
         stateMachine.toIdle();
         arrowStartPoint = null;
         currentArrowEndPoint = null;
         temporaryArrow = null;
+        currentSnapTarget = null;
         setCursor(Cursor.DEFAULT);
     }
 
@@ -887,5 +907,71 @@ public abstract class BlockShape extends Shape {
         colorControls.add(strokeColorPicker);
 
         return colorControls;
+    }
+
+    /**
+     * 更新可吸附点的视觉显示
+     * 显示目标形状的所有可吸附点为红色圆点
+     * 
+     * @param snapResult 吸附目标结果
+     * @param container  形状容器
+     */
+    private void updateSnapPointVisuals(SnapTargetResult snapResult, Pane container) {
+        if (container == null || snapResult == null) {
+            return;
+        }
+
+        // 清除之前的显示
+        clearSnapPointVisuals(container);
+
+        // 保存当前的吸附目标
+        currentSnapTarget = snapResult;
+
+        // 获取目标形状的所有可吸附点
+        List<Point2D> snapPoints = snapResult.targetShape.getAllSnapPoints();
+
+        // 为每个吸附点创建红色圆点指示器
+        for (Point2D snapPoint : snapPoints) {
+            // 将形状本地坐标转换为容器坐标
+            Point2D containerPoint = snapResult.targetShape.localToParent(snapPoint);
+
+            // 创建红色圆点
+            javafx.scene.shape.Circle indicator = new javafx.scene.shape.Circle();
+            indicator.setCenterX(containerPoint.getX());
+            indicator.setCenterY(containerPoint.getY());
+            indicator.setRadius(4.0); // 圆点半径
+            indicator.setFill(Color.RED);
+            indicator.setStroke(Color.DARKRED);
+            indicator.setStrokeWidth(1.0);
+
+            // 设置为不可交互，避免干扰其他操作
+            indicator.setMouseTransparent(true);
+
+            // 添加到容器中
+            container.getChildren().add(indicator);
+            snapPointIndicators.add(indicator);
+        }
+    }
+
+    /**
+     * 清除所有可吸附点的视觉显示
+     * 
+     * @param container 形状容器
+     */
+    private void clearSnapPointVisuals(Pane container) {
+        if (container == null) {
+            return;
+        }
+
+        // 从容器中移除所有指示器
+        for (javafx.scene.shape.Circle indicator : snapPointIndicators) {
+            container.getChildren().remove(indicator);
+        }
+
+        // 清空指示器列表
+        snapPointIndicators.clear();
+
+        // 清除当前吸附目标
+        currentSnapTarget = null;
     }
 }

@@ -23,7 +23,7 @@ public class ShapeButton implements Initializable {
     private ShapeType shapeType = ShapeType.OVAL; // 默认为椭圆
 
     // 定义默认的形状大小
-    private static final double DEFAULT_SHAPE_WIDTH = 80;
+    private static final double DEFAULT_SHAPE_WIDTH = 120;
     private static final double DEFAULT_SHAPE_HEIGHT = 80;
 
     /**
