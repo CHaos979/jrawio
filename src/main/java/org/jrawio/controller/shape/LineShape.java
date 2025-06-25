@@ -302,11 +302,53 @@ public abstract class LineShape extends Shape {
      */
     @Override
     protected boolean onBeforeSelectionHandling(MouseEvent event) {
-        // 如果不是在控制点上，且这是一个拖拽操作的开始，则断开所有连接
-        if (selected && getLineControlPointAt(event.getX(), event.getY()) == null) {
+        // 检查是否在控制点上（需要临时检查，不依赖选中状态）
+        boolean onControlPoint = isOnControlPoint(event.getX(), event.getY());
+
+        // 如果不是在控制点上，则断开所有连接
+        // 无论线形是否已选中，只要拖拽线形本体就断开连接
+        if (!onControlPoint) {
+            System.out.println("LineShape: Dragging line body detected, disconnecting all connections");
             disconnectAll();
         }
+
         return false; // 继续执行标准的选择处理
+    }
+
+    /**
+     * 检查是否在控制点上（不依赖选中状态）
+     * 
+     * @param x 鼠标X坐标
+     * @param y 鼠标Y坐标
+     * @return 是否在控制点上
+     */
+    private boolean isOnControlPoint(double x, double y) {
+        double padding = 4;
+        double[] drawingArea = ShapeGeometryUtils.calculateDrawingArea(getWidth(), getHeight(), padding);
+        double drawX = drawingArea[0];
+        double drawY = drawingArea[1];
+        double drawWidth = drawingArea[2];
+        double drawHeight = drawingArea[3];
+
+        // 计算实际的起始点和结束点坐标
+        double actualStartX = drawX + (startPoint.getX() / getWidth()) * drawWidth;
+        double actualStartY = drawY + (startPoint.getY() / getHeight()) * drawHeight;
+        double actualEndX = drawX + (endPoint.getX() / getWidth()) * drawWidth;
+        double actualEndY = drawY + (endPoint.getY() / getHeight()) * drawHeight;
+
+        // 检查起始点控制点
+        double distToStart = Math.sqrt(Math.pow(x - actualStartX, 2) + Math.pow(y - actualStartY, 2));
+        if (distToStart <= CONTROL_POINT_SIZE / 2 + 2) {
+            return true;
+        }
+
+        // 检查结束点控制点
+        double distToEnd = Math.sqrt(Math.pow(x - actualEndX, 2) + Math.pow(y - actualEndY, 2));
+        if (distToEnd <= CONTROL_POINT_SIZE / 2 + 2) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
